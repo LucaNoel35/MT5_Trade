@@ -310,12 +310,12 @@ class ConTrader:
         correlation = df.corr()
         if not correlation.where(correlation < 1).stack().empty:
 
-            max_corr_index = correlation.where(correlation < 1).stack().idxmax()
+            max_corr_index = correlation.where(correlation < 1).stack().idxmin()
             corr = correlation.loc[max_corr_index]
             bool= (self.instrument!=self.instrument_b)
             bool_tot= bool
             
-            if (corr>low_correlation_value) and bool_tot :
+            if (corr<-low_correlation_value) and bool_tot :
                 self.correlation=1
             else:
                 self.correlation=0 
@@ -344,12 +344,12 @@ class ConTrader:
         correlation = df.corr()
         if not correlation.where(correlation < 1).stack().empty:
 
-            max_corr_index = correlation.where(correlation < 1).stack().idxmax()
+            max_corr_index = correlation.where(correlation < 1).stack().idxmin()
             corr = correlation.loc[max_corr_index] 
             bool= (self.instrument!=self.instrument_b)
             bool_tot= bool
             
-            if (corr>high_correlation_value) and bool_tot:
+            if (corr<-high_correlation_value) and bool_tot:
                 self.correlation=1
             else:
                 self.correlation=0
@@ -946,25 +946,16 @@ def correlation_matrix(trader1,trader2,ls,watchlist):
                 correlation.at[i, j] = np.nan
     
     if trader1.position==0 and trader2.position==0:
-        max_corr_index = correlation.where(correlation < 1).stack().idxmax()
+        max_corr_index = correlation.where(correlation < 1).stack().idxmin()
     elif trader1.position!=0 and trader2.position==0:
         max_corr_index = (trader1.instrument,correlation.loc[trader1.instrument].drop(trader1.instrument).idxmax())
     elif trader1.position==0 and trader2.position!=0:
         max_corr_index = (correlation.loc[trader2.instrument].drop(trader2.instrument).idxmax(),trader2.instrument)
     else:
-        max_corr_index = correlation.where(correlation < 1).stack().idxmax()
+        max_corr_index = correlation.where(correlation < 1).stack().idxmin()
 
     most_correlated_pair = max_corr_index[0], max_corr_index[1]
     correlation_value = correlation.loc[max_corr_index]
-    """
-    if trader1.strat==-1 and trader2.strat==1 and (data[max_corr_index[0]].iloc[-1]>data[max_corr_index[1]].iloc[-1]) :
-        trader1.replace(max_corr_index[0],max_corr_index[1],ls)
-        trader2.replace(max_corr_index[1],max_corr_index[0],ls)
-    elif trader1.strat==1 and trader2.strat==-1 and (data[max_corr_index[0]].iloc[-1]>data[max_corr_index[1]].iloc[-1]) :
-        trader1.replace(max_corr_index[1],max_corr_index[0],ls)
-        trader2.replace(max_corr_index[0],max_corr_index[1],ls)
-    else:
-    """
     trader1.replace(max_corr_index[0],max_corr_index[1],ls)
     trader2.replace(max_corr_index[1],max_corr_index[0],ls)
 
@@ -975,16 +966,16 @@ if __name__ == "__main__":
     if not mt5.initialize(login = nombre, password = pwd, server = server_name, path = path_name):
         print("initialize() failed")
 
-    trader1 = ConTrader( trader1_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=2,space=0,instrument_b=trader2_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1) 
-    trader2 = ConTrader( trader2_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1.5,loss=1.5,space=0,instrument_b=trader1_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1)
-    trader3 = ConTrader( trader3_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=2,space=0,instrument_b=trader4_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1)
-    trader4 = ConTrader( trader4_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1.5,loss=1.5,space=0,instrument_b=trader3_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1)
+    trader1 = ConTrader( trader1_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader2_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1) 
+    trader2 = ConTrader( trader2_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader1_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1)
+    trader3 = ConTrader( trader3_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader4_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1)
+    trader4 = ConTrader( trader4_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader3_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1)
     
 
-    trader5 = ConTrader( trader5_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=2,space=0,instrument_b=trader6_instrument,pourcentage=0.02,hedge=1,initialize=-1,beginning=1) 
-    trader6 = ConTrader( trader6_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1.5,loss=1.5,space=0,instrument_b=trader5_instrument,pourcentage=0.02,hedge=1,initialize=-1,beginning=1)
-    trader7 = ConTrader( trader7_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=2,space=0,instrument_b=trader8_instrument,pourcentage=0.02,hedge=1,initialize=-1,beginning=1)
-    trader8 = ConTrader( trader8_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1.5,loss=1.5,space=0,instrument_b=trader7_instrument,pourcentage=0.02,hedge=1,initialize=-1,beginning=1)
+    trader5 = ConTrader( trader5_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader6_instrument,pourcentage=0.02,hedge=1,initialize=-1,beginning=1) 
+    trader6 = ConTrader( trader6_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader5_instrument,pourcentage=0.02,hedge=1,initialize=-1,beginning=1)
+    trader7 = ConTrader( trader7_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader8_instrument,pourcentage=0.02,hedge=1,initialize=-1,beginning=1)
+    trader8 = ConTrader( trader8_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader7_instrument,pourcentage=0.02,hedge=1,initialize=-1,beginning=1)
     
 
     trader1.setUnits()    
