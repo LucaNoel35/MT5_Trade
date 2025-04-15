@@ -128,7 +128,6 @@ class ConTrader:
 
         self.avg=None
         self.std=None
-        self.counting=0
         #*****************add strategy-specific attributes here******************        
 
         self.strat_b=self.strat
@@ -158,8 +157,6 @@ class ConTrader:
         self.replaced=0
         self.price_bought=None
         self.price_sold=None
-        self.counter_sell=0
-        self.counter_buy=0
 
         self.instrument_b_obj_reached_sell=False        
         self.instrument_b_obj_reached_buy=False        
@@ -519,7 +516,7 @@ class ConTrader:
                     self.max_level=df["h"].max()
                     self.min_level=df["l"].min() 
   
-                if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.counting==0) or self.counting==1:
+                if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.position_b==-1) or self.position_b==1:
                     
                     if  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price) and (((self.instrument_b_obj_reached_sell and self.config_b==1*self.strat_close and (self.close<self.price))) or (self.close>self.price)) and self.position_b ==-1:  
                         self.price=self.close
@@ -539,7 +536,7 @@ class ConTrader:
                     self.max_level=df["h"].max()
                     self.min_level=df["l"].min()
 
-                if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.counting==0) or self.counting==1:
+                if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.position_b==1) or self.position_b==-1:
                     
                     if   (self.config==-1*self.strat_close)  and self.objectif_reached_sell(self.price)  and (((self.instrument_b_obj_reached_buy and self.config_b==-1*self.strat_close and (self.close>self.price))) or (self.close<self.price)) and self.position_b ==1 :  
                         self.price=self.close
