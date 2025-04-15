@@ -408,13 +408,13 @@ class ConTrader:
         df["hist"]=hist
 
     def getEMA(self,df):
-        df["SMA_bol"]=df['c'].rolling(20).mean()
+        #df["SMA_bol"]=df['c'].rolling(20).mean()
         #df["Dist_bol"]=df['c'].rolling(20).std() * 2
         
-        df["Lower_bol"] = df["SMA_bol"] - df['c'].rolling(20).std()  # Lower Band -2 Std Dev
-        df["Upper_bol"] = df["SMA_bol"] + df['c'].rolling(20).std()  # Upper Band -2 Std Dev
-        df['config_bol'] = np.where((df['c']<df['Lower_bol'] ) ,1,0) 
-        df['config_bol'] = np.where((df['c']>df['Upper_bol'] ) ,-1,df['config_bol'] )  
+        #df["Lower_bol"] = df["SMA_bol"] - df['c'].rolling(20).std()  # Lower Band -2 Std Dev
+        #df["Upper_bol"] = df["SMA_bol"] + df['c'].rolling(20).std()  # Upper Band -2 Std Dev
+        #df['config_bol'] = np.where((df['c']<df['Lower_bol'] ) ,1,0) 
+        #df['config_bol'] = np.where((df['c']>df['Upper_bol'] ) ,-1,df['config_bol'] )  
 
 
         df['EMA_10'] = df["c"].ewm(span = 5, min_periods= 5).mean()
@@ -429,9 +429,10 @@ class ConTrader:
         df['ATR'] = ta.volatility.AverageTrueRange(df['h'],df['l'],df["c"],window=14,fillna=False).average_true_range()   
         self.avg=df["c"].mean()
         self.std=df["c"].std()
+
         self.atr=df["ATR"].iloc[-1]    
         self.config=  df["config"].iloc[-1]     
-        self.config_bol=  df["config_bol"].iloc[-1]   
+        #self.config_bol=  df["config_bol"].iloc[-1]   
         self.avg_space = df["EMA_spread_bin"].iloc[-1]
 
     def execute_trades(self):   
