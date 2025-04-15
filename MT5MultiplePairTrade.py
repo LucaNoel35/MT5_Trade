@@ -447,23 +447,25 @@ class ConTrader:
 
         # get the list of open positions
         positions = mt5.positions_get(symbol=self.instrument)
-        account_info = mt5.account_info()
-        self.global_equity = account_info.equity
-        if self.original_balance==None :
-            self.original_balance=account_info.balance
-        elif self.global_equity==None:
+
+        if apply_quota==1:
+            account_info = mt5.account_info()
             self.global_equity = account_info.equity
+            if self.original_balance==None :
+                self.original_balance=account_info.balance
+            elif self.global_equity==None:
+                self.global_equity = account_info.equity
 
-        if self.original_balance!=0 and self.original_balance!=None and self.global_equity!=None and apply_quota==1:
-            if (self.global_equity/self.original_balance)>(1+(total_gain*self.pourcentage)) or (self.global_equity/self.original_balance)<(1-(total_loss*self.pourcentage))  :
-                self.quota=True
-            elif (self.global_equity/self.original_balance)<((1+(total_gain*self.pourcentage))-self.tolerance) and (self.global_equity/self.original_balance)>((1-(total_loss*self.pourcentage))+self.tolerance):
-                self.quota=False
+            if self.original_balance!=0 and self.original_balance!=None and self.global_equity!=None :
+                if (self.global_equity/self.original_balance)>(1+(total_gain*self.pourcentage)) or (self.global_equity/self.original_balance)<(1-(total_loss*self.pourcentage))  :
+                    self.quota=True
+                elif (self.global_equity/self.original_balance)<((1+(total_gain*self.pourcentage))-self.tolerance) and (self.global_equity/self.original_balance)>((1-(total_loss*self.pourcentage))+self.tolerance):
+                    self.quota=False
 
-        
-        if self.position==0 and self.position_b==0 and self.quota==True and len(positions)==0:
-            self.original_balance=account_info.balance
-            self.price=self.close
+            
+            if self.position==0 and self.position_b==0 and self.quota==True and len(positions)==0:
+                self.original_balance=account_info.balance
+                self.price=self.close
 
         if self.close!=None and self.close_b!=None:
             if self.strat_b==self.strat and self.position_b!=0:
@@ -1082,12 +1084,12 @@ if __name__ == "__main__":
             if trader1.position==0 and trader2.position==0 and trader3.position==0 and trader4.position==0:
                 break
         """
+        if mt5.last_error()[0]!=1:
+            mt5.initialize(login = nombre, password = pwd, server = server_name, path = path_name)
+            print("initialize() failed")
 
         try :             
             thread_running = 1  
-            if mt5.last_error()[0]!=1:
-                mt5.initialize(login = nombre, password = pwd, server = server_name, path = path_name)
-                print("initialize() failed")
 
             if (trader1.correlation==0 and trader1.replacement==trader1.instrument) or (trader2.correlation==0 and trader2.replacement==trader2.instrument):
                 #trader1.random_change_instrument(trader2,trader3,Watch_List)
