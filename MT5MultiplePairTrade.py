@@ -517,14 +517,16 @@ class ConTrader:
                     self.max_level=df["h"].max()
                     self.min_level=df["l"].min() 
   
-                if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.position_b==-1) or self.position_b==1:
+                if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.position_b==-1) or self.position_b!=-1:
                     
                     if  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price) and (((self.instrument_b_obj_reached_sell and self.config_b==1*self.strat_close and (self.close<self.price))) or (self.close>self.price)) and self.position_b ==-1:  
                         self.price=self.close
+                        self.count=0
                         self.close_position(positions)
                     
                     elif  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price) and self.position_b !=-1:  
                         self.price=self.close
+                        self.count=0
                         self.close_position(positions)
                                                              
             else :
@@ -537,14 +539,16 @@ class ConTrader:
                     self.max_level=df["h"].max()
                     self.min_level=df["l"].min()
 
-                if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.position_b==1) or self.position_b==-1:
+                if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.position_b==1) or self.position_b!=1:
                     
                     if   (self.config==-1*self.strat_close)  and self.objectif_reached_sell(self.price)  and (((self.instrument_b_obj_reached_buy and self.config_b==-1*self.strat_close and (self.close>self.price))) or (self.close<self.price)) and self.position_b ==1 :  
                         self.price=self.close
+                        self.count=0
                         self.close_position(positions) 
 
                     elif   (self.config==-1*self.strat_close)  and self.objectif_reached_sell(self.price)  and self.position_b !=1 :  
                         self.price=self.close
+                        self.count=0
                         self.close_position(positions) 
                     
                     #basically change hold position
@@ -562,21 +566,23 @@ class ConTrader:
                 self.max_level=df["h"].max()
                 self.min_level=df["l"].min()
                 
-            if  self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip and timing and self.correlation==1 and self.quota==False: 
+            if  self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip and timing and self.correlation==1 and self.quota==False and self.count>5: 
                 
                 if  ((self.config==-1*self.strat*self.initialize and (self.avg_space==1 or apply_spread_avg==0) and (self.beginning!=1 or self.position_b==0)) or (self.beginning==1 and self.position_b==1)) and abs(self.close-self.price)>self.space*self.val :
                     self.sell_order(self.units)
                     self.price=self.close 
                     self.val=val       
                     self.beginning=-1   
-                    self.initialize=1       
+                    self.initialize=1  
+                    self.count=0     
 
                 elif ((self.config==1*self.strat*self.initialize and (self.avg_space==1 or apply_spread_avg==0) and (self.beginning!=1 or  self.position_b==0)) or (self.beginning==1 and self.position_b==-1)) and abs(self.close-self.price)>self.space*self.val:
                     self.buy_order(self.units)
                     self.price=self.close
                     self.val=val
                     self.beginning=-1    
-                    self.initialize=1       
+                    self.initialize=1   
+                    self.count=0      
       
 
 
