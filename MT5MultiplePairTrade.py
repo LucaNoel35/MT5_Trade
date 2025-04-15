@@ -15,8 +15,8 @@ import random
 
 from datetime import datetime,timezone
 
-nombre =  62436458               
-pwd = 'Testidiot69!'
+nombre =  62602983               
+pwd = 't(N%)Sn9'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 
@@ -73,7 +73,6 @@ trader7_instrument='AUDUSD.pro'
 trader8_instrument='NZDUSD.pro'
 
 global_correlation=False
-
 
 
 class ConTrader:
@@ -310,12 +309,12 @@ class ConTrader:
         correlation = df.corr()
         if not correlation.where(correlation < 1).stack().empty:
 
-            max_corr_index = correlation.where(correlation < 1).stack().idxmin()
+            max_corr_index = correlation.where(correlation < 1).stack().idxmax()
             corr = correlation.loc[max_corr_index]
             bool= (self.instrument!=self.instrument_b)
             bool_tot= bool
             
-            if (corr<-low_correlation_value) and bool_tot :
+            if (corr>low_correlation_value) and bool_tot :
                 self.correlation=1
             else:
                 self.correlation=0 
@@ -344,12 +343,12 @@ class ConTrader:
         correlation = df.corr()
         if not correlation.where(correlation < 1).stack().empty:
 
-            max_corr_index = correlation.where(correlation < 1).stack().idxmin()
+            max_corr_index = correlation.where(correlation < 1).stack().idxmax()
             corr = correlation.loc[max_corr_index] 
             bool= (self.instrument!=self.instrument_b)
             bool_tot= bool
             
-            if (corr<-high_correlation_value) and bool_tot:
+            if (corr>high_correlation_value) and bool_tot:
                 self.correlation=1
             else:
                 self.correlation=0
@@ -422,7 +421,7 @@ class ConTrader:
 
 
         df['EMA_10'] = df["c"].ewm(span = 5, min_periods= 5).mean()
-        df['EMA_20'] = df["c"].ewm(span = 10, min_periods= 10).mean()
+        df['EMA_20'] = df["c"].ewm(span = 15, min_periods= 15).mean()
         df['EMA_spread']=abs(df['EMA_10']-df['EMA_20'])
         df['EMA_spread_avg']=df["EMA_spread"].ewm(span = 5, min_periods= 5).mean()
         df['EMA_spread_bin']=np.where((df['EMA_spread']>df['EMA_spread_avg'] ),1,0) 
@@ -520,15 +519,14 @@ class ConTrader:
   
                 if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.counting==0) or self.counting==1:
                     
-                    if  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price) and (((self.instrument_b_obj_reached_sell and (self.config_b==1*self.strat_close) and (self.strat_close==-1 and self.close<self.price))) or (self.strat_close==1 or self.close>self.price)) and self.position_b ==-1:  
+                    if  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price) and (((self.instrument_b_obj_reached_sell and self.config_b==1*self.strat_close and (self.close<self.price))) or (self.close>self.price)) and self.position_b ==-1:  
                         self.price=self.close
                         self.close_position(positions)
                     
                     elif  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price) and self.position_b !=-1:  
                         self.price=self.close
                         self.close_position(positions)
-                     
-                                         
+                                                             
             else :
                 #originally sell position
                 self.PL=positions[0].profit
@@ -541,7 +539,7 @@ class ConTrader:
 
                 if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.counting==0) or self.counting==1:
                     
-                    if   (self.config==-1*self.strat_close)  and self.objectif_reached_sell(self.price)  and (((self.instrument_b_obj_reached_buy and (self.config_b==-1*self.strat_close) and (self.strat_close==-1 and self.close>self.price))) or (self.strat_close==1 or self.close<self.price)) and self.position_b ==1 :  
+                    if   (self.config==-1*self.strat_close)  and self.objectif_reached_sell(self.price)  and (((self.instrument_b_obj_reached_buy and self.config_b==-1*self.strat_close and (self.close>self.price))) or (self.close<self.price)) and self.position_b ==1 :  
                         self.price=self.close
                         self.close_position(positions) 
 
@@ -946,13 +944,13 @@ def correlation_matrix(trader1,trader2,ls,watchlist):
                 correlation.at[i, j] = np.nan
     
     if trader1.position==0 and trader2.position==0:
-        max_corr_index = correlation.where(correlation < 1).stack().idxmin()
+        max_corr_index = correlation.where(correlation < 1).stack().idxmax()
     elif trader1.position!=0 and trader2.position==0:
         max_corr_index = (trader1.instrument,correlation.loc[trader1.instrument].drop(trader1.instrument).idxmax())
     elif trader1.position==0 and trader2.position!=0:
         max_corr_index = (correlation.loc[trader2.instrument].drop(trader2.instrument).idxmax(),trader2.instrument)
     else:
-        max_corr_index = correlation.where(correlation < 1).stack().idxmin()
+        max_corr_index = correlation.where(correlation < 1).stack().idxmax()
 
     most_correlated_pair = max_corr_index[0], max_corr_index[1]
     correlation_value = correlation.loc[max_corr_index]
