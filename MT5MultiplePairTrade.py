@@ -16,8 +16,8 @@ import time
 
 from datetime import datetime,timezone
 
-nombre =  62151134               
-pwd = 'Sephiroth35*'
+nombre =  62602983               
+pwd = 't(N%)Sn9'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 
@@ -583,7 +583,7 @@ class ConTrader:
                 
             if  self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip and timing and self.correlation==1 and self.quota==False and ((self.count>5 and self.beginning!=1) or self.beginning==1): 
                 
-                if  ((self.config==-1*self.strat*self.initialize and (self.avg_space==1 or apply_spread_avg==0) and (self.beginning!=1 or self.position_b==0)) or (self.beginning==1 and self.position_b==1)) and abs(self.close-self.price)>self.space*self.val :
+                if  ((self.config==-1*self.strat*self.initialize and (self.avg_space==1 or apply_spread_avg==0) and (self.beginning!=1)) or (self.beginning==1 and self.position_b==1)) and abs(self.close-self.price)>self.space*self.val :
                     self.sell_order(self.units)
                     self.price=self.close 
                     self.val=val       
@@ -591,7 +591,7 @@ class ConTrader:
                     self.initialize=1  
                     self.count=0     
 
-                elif ((self.config==1*self.strat*self.initialize and (self.avg_space==1 or apply_spread_avg==0) and (self.beginning!=1 or  self.position_b==0)) or (self.beginning==1 and self.position_b==-1)) and abs(self.close-self.price)>self.space*self.val:
+                elif ((self.config==1*self.strat*self.initialize and (self.avg_space==1 or apply_spread_avg==0) and (self.beginning!=1)) or (self.beginning==1 and self.position_b==-1)) and abs(self.close-self.price)>self.space*self.val:
                     self.buy_order(self.units)
                     self.price=self.close
                     self.val=val
