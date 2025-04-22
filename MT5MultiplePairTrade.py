@@ -12,11 +12,12 @@ from threading import Thread
 import sys
 import ta
 import random
+import time
 
 from datetime import datetime,timezone
 
-nombre =  62602983               
-pwd = 't(N%)Sn9'
+nombre =  62151134               
+pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 
@@ -26,7 +27,7 @@ global_equity=0
 number_of_instrument = 8
 total_gain=2
 total_loss=1
-hedge_factor=1.2
+hedge_factor=1.0
 time_frame=mt5.TIMEFRAME_M1
 base_currency='EUR'
 #to allow change direction of hold position
@@ -44,6 +45,7 @@ minimal_avg_pip_multiplier=25
 correlation_number=240
 correlation_multiplier=4
 correlation_divider=2
+global_inverse=-1
 
 high_correlation_value=0.75
 low_correlation_value=high_correlation_value/3
@@ -109,8 +111,8 @@ class ConTrader:
         self.last_bar = None
         self.config=0
         self.config_b=0
-        self.config_bol=0
-        self.config_b_bol=0
+        #self.config_bol=0
+        #self.config_b_bol=0
         self.PL=0
         self.PL_b=0
         self.PL_tot=0
@@ -120,6 +122,8 @@ class ConTrader:
         self.spread_total = minimal_pip_multiplier*self.pip
         self.spread_count = 1
         self.spread_average = minimal_pip_multiplier*self.pip
+        self.score=0
+        self.score_b=0
         self.bid = 0
         self.ask = 0
         self.count=0        
@@ -139,7 +143,8 @@ class ConTrader:
         self.s=0
         self.max_level=None
         self.min_level=None
-        self.atr=0           
+        self.atr=0  
+        self.atr_avg=0         
         self.stop_loss=None
         self.take_profit=None
         self.val=value_spread_multiplier*minimal_pip_multiplier*self.pip
@@ -212,6 +217,8 @@ class ConTrader:
         self.spread_count=self.spread_count + 1
         self.spread_average= self.spread_total / self.spread_count  
 
+        self.score=self.atr_avg/self.spread_average
+
 
     def get_most_recent(self, number = correlation_number):
 
@@ -258,6 +265,7 @@ class ConTrader:
                     self.spread_count = 1
                     self.spread_average = ((minimal_pip_multiplier+minimal_avg_pip_multiplier)/2)*self.pip
                     self.count=0
+                time.sleep(0.1)
             except:
                 error_message = mt5.last_error()
                 print(f"Something went wrong : {error_message} \n")
@@ -430,7 +438,8 @@ class ConTrader:
         self.avg=df["c"].mean()
         self.std=df["c"].std()
 
-        self.atr=df["ATR"].iloc[-1]    
+        self.atr=df["ATR"].iloc[-1] 
+        self.atr_avg=  df["ATR"].mean() 
         self.config=  df["config"].iloc[-1]     
         #self.config_bol=  df["config_bol"].iloc[-1]   
         self.avg_space = df["EMA_spread_bin"].iloc[-1]
@@ -474,14 +483,20 @@ class ConTrader:
                 else:
                     self.strat_close=1
                  
-            elif self.strat_b==self.strat and self.position_b==0 and self.close>self.close_b:
-                self.strat=-1 
-                self.strat_close=1
-            elif self.strat_b==self.strat and self.position_b==0 and self.close<self.close_b:
-                self.strat=1   
+            elif self.strat_b==self.strat and self.position_b==0 and self.score*global_inverse>self.score_b*global_inverse:
+                self.strat=1 
                 self.strat_close=-1
-           
+            elif self.strat_b==self.strat and self.position_b==0 and self.score*global_inverse<self.score_b*global_inverse:
+                self.strat=-1   
+                self.strat_close=1
 
+        if self.score*global_inverse>self.score_b*global_inverse:
+            self.strat=1
+            self.strat_close=-1            
+        elif self.score*global_inverse<self.score_b*global_inverse:
+            self.strat=-1
+            self.strat_close=1
+           
         #print(len(positions))
         now = datetime.now(timezone.utc)
 
@@ -519,12 +534,12 @@ class ConTrader:
   
                 if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.position_b==-1) or self.position_b!=-1:
                     
-                    if  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price) and (((self.instrument_b_obj_reached_sell and self.config_b==1*self.strat_close and (self.close<self.price))) or (self.close>self.price)) and self.position_b ==-1:  
+                    if  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price) and ((self.close*global_inverse>self.price*global_inverse and self.instrument_b_obj_reached_sell and self.config_b==1*self.strat_close) or self.close*global_inverse<self.price*global_inverse ) and self.position_b ==-1:  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)
                     
-                    elif  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price) and self.position_b !=-1:  
+                    elif (self.config==1*self.strat_close) and self.objectif_reached_buy(self.price) and self.position_b !=-1:  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)
@@ -541,12 +556,12 @@ class ConTrader:
 
                 if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.position_b==1) or self.position_b!=1:
                     
-                    if   (self.config==-1*self.strat_close)  and self.objectif_reached_sell(self.price)  and (((self.instrument_b_obj_reached_buy and self.config_b==-1*self.strat_close and (self.close>self.price))) or (self.close<self.price)) and self.position_b ==1 :  
+                    if   (self.config==-1*self.strat_close)  and self.objectif_reached_sell(self.price)  and ((self.close*global_inverse<self.price*global_inverse and self.instrument_b_obj_reached_buy and self.config_b==-1*self.strat_close) or self.close*global_inverse>self.price*global_inverse ) and self.position_b ==1 :  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions) 
 
-                    elif   (self.config==-1*self.strat_close)  and self.objectif_reached_sell(self.price)  and self.position_b !=1 :  
+                    elif (self.config==-1*self.strat_close) and self.objectif_reached_sell(self.price) and self.position_b !=1 :  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions) 
@@ -566,7 +581,7 @@ class ConTrader:
                 self.max_level=df["h"].max()
                 self.min_level=df["l"].min()
                 
-            if  self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip and timing and self.correlation==1 and self.quota==False and self.count>5: 
+            if  self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip and timing and self.correlation==1 and self.quota==False and ((self.count>5 and self.beginning!=1) or self.beginning==1): 
                 
                 if  ((self.config==-1*self.strat*self.initialize and (self.avg_space==1 or apply_spread_avg==0) and (self.beginning!=1 or self.position_b==0)) or (self.beginning==1 and self.position_b==1)) and abs(self.close-self.price)>self.space*self.val :
                     self.sell_order(self.units)
@@ -819,7 +834,8 @@ class ConTrader:
         self.pip_b=trader.pip
         self.decimal_b=trader.decimal
         self.config_b=trader.config
-        self.config_b_bol=trader.config_bol
+        self.score_b=trader.score
+        #self.config_b_bol=trader.config_bol
         self.PL_b=trader.PL
         self.instrument_b_obj_reached_buy=trader.objectif_reached_buy(trader.price)
         self.instrument_b_obj_reached_sell=trader.objectif_reached_sell(trader.price)
@@ -829,12 +845,20 @@ class ConTrader:
             self.replacement_b=trader.instrument
 
         if self.close!=None and self.close_b!=None:
-            if self.close>self.close_b and self.strat==self.strat_b:
-                self.strat=-1
-                self.strat_close=1
-            elif self.close<self.close_b and self.strat==self.strat_b:
+            if self.score*global_inverse>self.score_b*global_inverse and self.strat==self.strat_b:
                 self.strat=1
                 self.strat_close=-1
+            elif self.score*global_inverse<self.score_b*global_inverse and self.strat==self.strat_b:
+                self.strat=-1
+                self.strat_close=1
+
+        if self.score*global_inverse>self.score_b*global_inverse:
+            self.strat=1
+            self.strat_close=-1            
+        elif self.score*global_inverse<self.score_b*global_inverse:
+            self.strat=-1
+            self.strat_close=1 
+               
 
     
     def emergency_change_instrument(self,Watchlist,ls):
@@ -970,16 +994,16 @@ if __name__ == "__main__":
     if not mt5.initialize(login = nombre, password = pwd, server = server_name, path = path_name):
         print("initialize() failed")
 
-    trader1 = ConTrader( trader1_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader2_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1) 
-    trader2 = ConTrader( trader2_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader1_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1)
-    trader3 = ConTrader( trader3_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader4_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1)
-    trader4 = ConTrader( trader4_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader3_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1)
+    trader1 = ConTrader( trader1_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader2_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1) 
+    trader2 = ConTrader( trader2_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader1_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1)
+    trader3 = ConTrader( trader3_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader4_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1)
+    trader4 = ConTrader( trader4_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader3_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1)
     
 
     trader5 = ConTrader( trader5_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader6_instrument,pourcentage=0.02,hedge=1,initialize=-1,beginning=1) 
-    trader6 = ConTrader( trader6_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader5_instrument,pourcentage=0.02,hedge=1,initialize=-1,beginning=1)
+    trader6 = ConTrader( trader6_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader5_instrument,pourcentage=0.02,hedge=-1,initialize=-1,beginning=-1)
     trader7 = ConTrader( trader7_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader8_instrument,pourcentage=0.02,hedge=1,initialize=-1,beginning=1)
-    trader8 = ConTrader( trader8_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader7_instrument,pourcentage=0.02,hedge=1,initialize=-1,beginning=1)
+    trader8 = ConTrader( trader8_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader7_instrument,pourcentage=0.02,hedge=-1,initialize=-1,beginning=-1)
     
 
     trader1.setUnits()    
@@ -1080,14 +1104,15 @@ if __name__ == "__main__":
     
     while True:
         now = datetime.now(timezone.utc)
-        
+        """
         if now.time() > pd.to_datetime("21:00").time() and now.time() < pd.to_datetime("22:00").time():
             break 
         """
+        
         if trader1.quota==True and trader2.quota==True and trader3.quota==True and trader4.quota==True:
             if trader1.position==0 and trader2.position==0 and trader3.position==0 and trader4.position==0:
                 break
-        """
+        
         if mt5.last_error()[0]!=1:
             mt5.initialize(login = nombre, password = pwd, server = server_name, path = path_name)
             print("initialize() failed")
