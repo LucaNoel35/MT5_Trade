@@ -22,7 +22,7 @@ path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 thread_running=0
 global_margin=0
 global_equity=0
-number_of_instrument = 4
+number_of_instrument = 8
 total_gain=2
 total_loss=1
 
@@ -49,6 +49,12 @@ trader2_instrument='EURJPY.pro'
 trader3_instrument='EURCAD.pro'
 trader4_instrument='USDCAD.pro'
 
+trader5_instrument='AUDJPY.pro'
+trader6_instrument='CADJPY.pro'
+
+trader7_instrument='EURCHF.pro'
+trader8_instrument='USDCHF.pro'
+
 # adjust weight of each instrument so they have the same effect, basically do a ratio of instrument price on lowest of the instrument prices
 # as a rule of thumb, each time we have a instrument with base currency that has higher value ex: (GBP)JPY and (EUR)JPY, we have to apply a weight to GBPJPY 0.5 (something inferior to 1)
 #  ex: (GBP)USD and (EUR)USD, we have to apply a weight to GBPUSD 0.5 (something inferior to 1 to match gains and loss of other instruments)
@@ -59,6 +65,12 @@ Weight2=1
 
 Weight3=1
 Weight4=1
+
+Weight5=1
+Weight6=1
+
+Weight7=1
+Weight8=1
 
 class ConTrader:
     def __init__(self, instrument,pip,decimal,gain,loss,space,pourcentage,weight):
@@ -128,6 +140,7 @@ class ConTrader:
         self.global_equity=None
         self.coherence_bool=True     
         self.hold_beginning=-1   
+        self.inverse=1
         #************************************************************************
                 
  
@@ -135,7 +148,10 @@ class ConTrader:
         if self.instrument in [ 'USDJPY.pro' , 'EURJPY.pro','AUDJPY.pro']:
             self.decimal=3
             self.pip=0.001
-        elif self.instrument in ['NZDJPY.pro','GBPJPY.pro','CHFJPY.pro']:
+        elif self.instrument in ['NZDJPY.pro','GBPJPY.pro','CADJPY.pro']:
+            self.decimal=3
+            self.pip=0.002
+        elif self.instrument in ['CHFJPY.pro']:
             self.decimal=3
             self.pip=0.0025
         elif self.instrument in ['EURCAD.pro']:
@@ -406,10 +422,14 @@ class ConTrader:
         previous_time=self.last_bar
         val=max(value_spread_multiplier*self.spread,self.atr) 
 
-        self.execute_trades(1,-1,"price_1","price_2","position_1","position_2",self.loss,self.gain,-1,1)
-        self.execute_trades(-1,1,"price_2","price_1","position_2","position_1",self.mid_value,self.mid_value,-1,1)        
+        self.execute_trades(1,-1,"price_1","price_2","position_1","position_2",self.loss,self.loss,-1,1)
+        self.execute_trades(-1,1,"price_2","price_1","position_2","position_1",self.gain,self.gain,-1,1)        
         #self.execute_trades(-1,1,"price_3","position_3",self.mid_value,self.loss,-1,1)
         #self.execute_trades(-1,1,"price_4","position_4",self.gain,self.gain,-1,1)
+        if self.gain<self.loss:
+            self.inverse=-1
+        else:
+            self.inverse=1
         self.val=val
         while True:
             try:
@@ -418,8 +438,8 @@ class ConTrader:
                 self.prepare_data()
                 val=max(value_spread_multiplier*self.spread,self.atr) 
                 if self.positions!=None:
-                    self.execute_trades(1,-1,"price_1","price_2","position_1","position_2",self.loss,self.gain,-1,1)
-                    self.execute_trades(-1,1,"price_2","price_1","position_2","position_1",self.mid_value,self.mid_value,-1,1)       
+                    self.execute_trades(1,-1,"price_1","price_2","position_1","position_2",self.loss,self.loss,-1,1)
+                    self.execute_trades(-1,1,"price_2","price_1","position_2","position_1",self.gain,self.gain,-1,1)        
                     #self.execute_trades(-1,1,"price_3","position_3",self.mid_value,self.loss,-1,1)
                     #self.execute_trades(-1,1,"price_4","position_4",self.gain,self.gain,-1,1)
                 self.val=val
@@ -512,8 +532,8 @@ class ConTrader:
 
     def getEMA(self,df):
         #self.ichimoku(df)
-        df['EMA_5'] = df["c"].ewm(span = 5, min_periods= 5).mean()
-        df['EMA_10'] = df["c"].ewm(span = 10, min_periods= 10).mean()
+        df['EMA_5'] = df["c"].ewm(span = 10, min_periods= 10).mean()
+        df['EMA_10'] = df["c"].ewm(span = 20, min_periods= 20).mean()
         df['config'] = np.where((df['EMA_5']>df['EMA_10'] ) ,1,0) 
         df['config'] = np.where((df['EMA_5']<df['EMA_10'] ) ,-1,df['config'] )                   
         df['ATR'] = ta.volatility.AverageTrueRange(df['h'],df['l'],df["c"],window=14,fillna=False).average_true_range()   
@@ -577,9 +597,10 @@ class ConTrader:
 
     def execute_trades(self,strat,strat_close,price_name,price_name_2,position_name,position_name_2,gain,loss,mode_placement,mode_close):
         price=getattr(self, price_name)
+        price_2=getattr(self, price_name_2)
         position_taken=getattr(self, position_name)
         position_taken_2=getattr(self, position_name_2)
-        price_2=getattr(self, price_name_2)
+
 
         now = datetime.now(timezone.utc)   
         if self.positions==None:
@@ -611,6 +632,8 @@ class ConTrader:
 
         if  price==None or self.max_level==None or self.min_level==None or self.first_price==None:               
             price=self.close
+            if price_2==None:
+                price_2=self.close
             self.first_price=self.close
             self.max_level=df["h"].max()
             self.min_level=df["l"].min()
@@ -624,8 +647,7 @@ class ConTrader:
                 self.max_level=df["h"].max()
                 self.min_level=df["l"].min()
 
-                temp=1
-                
+                temp=1                
                 if (strat==strat_close):
                     temp=temp*self.hold_beginning
                 
@@ -660,15 +682,7 @@ class ConTrader:
                     if (position.type==0) and (position_taken==1):
                     #originally buy position     
                    
-                        if   (strat!=strat_close or hold_invertible==False) and (df.at[ls[-1],"config"]==1*strat_close)  and position_taken_2==-1 and ((self.objectif_reached_sell(price_2,gain,loss,mode_close) and (strat_close==-1 and self.close<price)) or (strat_close==1 or self.close>price)) and self.objectif_reached_buy(price,gain,loss,mode_close)  :  
-                            #price=self.close
-                            self.close_buy_position(position)   
-                            position_taken=0
-                            #setattr(self,price_name,price)
-                            #setattr(self,position_name,position_taken)
-                            self.positions=None
-
-                        elif   (strat!=strat_close or hold_invertible==False) and (df.at[ls[-1],"config"]==1*strat_close) and position_taken_2!=-1 and self.objectif_reached_buy(price,gain,loss,mode_close) :  
+                        if   (strat!=strat_close or hold_invertible==False) and (df.at[ls[-1],"config"]==1*strat_close) and position_taken_2==-1  and ((self.close*self.inverse<self.inverse*price and self.objectif_reached_sell(price_2,gain,loss,mode_close)) or self.close*self.inverse>price*self.inverse) and self.objectif_reached_buy(price,gain,loss,mode_close)  :  
                             #price=self.close
                             self.close_buy_position(position)   
                             position_taken=0
@@ -676,6 +690,16 @@ class ConTrader:
                             #setattr(self,position_name,position_taken)
                             self.positions=None
                         #basically change hold position
+
+                        elif   (strat!=strat_close or hold_invertible==False) and (df.at[ls[-1],"config"]==1*strat_close)  and position_taken_2!=-1 and self.objectif_reached_buy(price,gain,loss,mode_close)  :  
+                            #price=self.close
+                            self.close_buy_position(position)   
+                            position_taken=0
+                            #setattr(self,price_name,price)
+                            #setattr(self,position_name,position_taken)
+                            self.positions=None
+                        #basically change hold position
+
                         elif   strat==strat_close and hold_invertible==True and (df.at[ls[-1],"config"]==-1*strat) and self.close*strat_close<self.first_price*strat_close  and self.objectif_reached_buy(self.first_price,gain,loss,mode_close)  :  
                             #price=self.close
                             self.close_buy_position(position)
@@ -688,22 +712,20 @@ class ConTrader:
                     if (position.type!=0) and (position_taken==-1):
                     #originally sell position    
 
-                        if  (strat!=strat_close or hold_invertible==False) and (df.at[ls[-1],"config"]==-1*strat_close) and position_taken_2==1 and ((self.objectif_reached_buy(price_2,gain,loss,mode_close) and (strat_close==-1 and self.close>price) ) or (strat_close==1 or self.close<price)) and self.objectif_reached_sell(price,gain,loss,mode_close) :  
+                        if  (strat!=strat_close or hold_invertible==False) and (df.at[ls[-1],"config"]==-1*strat_close)  and position_taken_2==1  and ((self.close*self.inverse>price*self.inverse and self.objectif_reached_buy(price_2,gain,loss,mode_close)) or self.close*self.inverse<price*self.inverse) and self.objectif_reached_sell(price,gain,loss,mode_close) :  
                             #price=self.close
                             self.close_sell_position(position)   
                             position_taken=0
                             #setattr(self,price_name,price)
                             #setattr(self,position_name,position_taken)
                             self.positions=None
-
-                        elif  (strat!=strat_close or hold_invertible==False) and (df.at[ls[-1],"config"]==-1*strat_close) and position_taken_2!=1  and self.objectif_reached_sell(price,gain,loss,mode_close) :  
+                        elif  (strat!=strat_close or hold_invertible==False) and (df.at[ls[-1],"config"]==-1*strat_close)  and position_taken_2!=1  and self.objectif_reached_sell(price,gain,loss,mode_close) :  
                             #price=self.close
                             self.close_sell_position(position)   
                             position_taken=0
                             #setattr(self,price_name,price)
                             #setattr(self,position_name,position_taken)
                             self.positions=None
-
                         #basically change hold position
                         elif  strat==strat_close and hold_invertible==True and (df.at[ls[-1],"config"]==1*strat) and self.close*strat_close>self.first_price*strat_close  and self.objectif_reached_sell(self.first_price,gain,loss,mode_close) :  
                             #price=self.close
@@ -890,11 +912,24 @@ if __name__ == "__main__":
     trader3 = ConTrader( trader3_instrument, pip=0.00001,decimal=5,gain=2,loss=1,space=0,pourcentage=global_percentage,weight=Weight3)    
     trader4 = ConTrader( trader4_instrument, pip=0.00001,decimal=5,gain=2,loss=1,space=0,pourcentage=global_percentage,weight=Weight4)    
 
+    trader5 = ConTrader( trader5_instrument, pip=0.001,decimal=3,gain=2,loss=1,space=0,pourcentage=global_percentage,weight=Weight5)    
+    trader6 = ConTrader( trader6_instrument, pip=0.001,decimal=3,gain=2,loss=1,space=0,pourcentage=global_percentage,weight=Weight6) 
+
+    trader7 = ConTrader( trader7_instrument, pip=0.00001,decimal=5,gain=2,loss=1,space=0,pourcentage=global_percentage,weight=Weight7)    
+    trader8 = ConTrader( trader8_instrument, pip=0.00001,decimal=5,gain=2,loss=1,space=0,pourcentage=global_percentage,weight=Weight8)    
+
     trader1.setUnits()    
     trader2.setUnits() 
 
     trader3.setUnits()    
     trader4.setUnits()
+
+    trader5.setUnits()    
+    trader6.setUnits() 
+
+    trader7.setUnits()    
+    trader8.setUnits()
+
 
     trader1.get_most_recent(sample_number)    
     trader2.get_most_recent(sample_number)
@@ -902,11 +937,23 @@ if __name__ == "__main__":
     trader3.get_most_recent(sample_number)    
     trader4.get_most_recent(sample_number) 
 
+    trader5.get_most_recent(sample_number)    
+    trader6.get_most_recent(sample_number)
+
+    trader7.get_most_recent(sample_number)    
+    trader8.get_most_recent(sample_number) 
+
     thread1=trader1.runTrade()   
     thread2=trader2.runTrade() 
      
     thread3=trader3.runTrade()   
     thread4=trader4.runTrade()  
+
+    thread5=trader5.runTrade()   
+    thread6=trader6.runTrade() 
+     
+    thread7=trader7.runTrade()   
+    thread8=trader8.runTrade()
 
     while True:
         now = datetime.now(timezone.utc)
