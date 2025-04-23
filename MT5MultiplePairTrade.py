@@ -426,15 +426,15 @@ class ConTrader:
         #df['config_bol'] = np.where((df['c']>df['Upper_bol'] ) ,-1,df['config_bol'] )  
 
 
-        df['EMA_10'] = df["c"].ewm(span = 5, min_periods= 5).mean()
-        df['EMA_20'] = df["c"].ewm(span = 15, min_periods= 15).mean()
-        df['EMA_spread']=abs(df['EMA_10']-df['EMA_20'])
+        df['EMA_5'] = df["c"].ewm(span = 5, min_periods= 5).mean()
+        df['EMA_15'] = df["c"].ewm(span = 15, min_periods= 15).mean()
+        df['EMA_spread']=abs(df['EMA_5']-df['EMA_15'])
         df['EMA_spread_avg']=df["EMA_spread"].ewm(span = 5, min_periods= 5).mean()
         df['EMA_spread_bin']=np.where((df['EMA_spread']>df['EMA_spread_avg'] ),1,0) 
 
         #df['EMA_21'] = df["c"].ewm(span = 21, min_periods= 21).mean()
-        df['config'] = np.where((df['EMA_10']>df['EMA_20'] ),1,0) 
-        df['config'] = np.where((df['EMA_10']<df['EMA_20'] ),-1,df['config'] )                  
+        df['config'] = np.where((df['EMA_5']>df['EMA_15'] ),1,0) 
+        df['config'] = np.where((df['EMA_5']<df['EMA_15'] ),-1,df['config'] )                  
         df['ATR'] = ta.volatility.AverageTrueRange(df['h'],df['l'],df["c"],window=14,fillna=False).average_true_range()   
         self.avg=df["c"].mean()
         self.std=df["c"].std()
