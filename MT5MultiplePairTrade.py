@@ -50,8 +50,6 @@ global_inverse=-1
 high_correlation_value=0.75
 low_correlation_value=high_correlation_value/3
 
-
-
 #advised to always use pairs with one currency always present in each of them
 #not enough correct currencies to be used correctly
 #GBPJPY and CHFJPY too expensive compared to EUR
@@ -65,7 +63,6 @@ trader1_instrument='EURJPY.pro'
 trader2_instrument='USDJPY.pro'
 trader3_instrument='CADJPY.pro'
 trader4_instrument='AUDJPY.pro'
-
 
 
 # Add more if needed but with a different watchlist if there is not enough pair to compare
@@ -83,6 +80,10 @@ class ConTrader:
         self.instrument_b = instrument_b
         self.gain=gain
         self.loss=loss
+
+        self.gain_b=gain
+        self.loss_b=loss
+
         self.gain_original=gain
         self.loss_original=loss
         self.pourcentage=pourcentage
@@ -474,7 +475,7 @@ class ConTrader:
                 self.original_balance=account_info.balance
                 self.price=self.close
 
-        if self.close!=None and self.close_b!=None:
+        if self.close!=None and self.close_b!=None and self.gain==self.gain_b and self.loss==self.loss_b:
             if self.strat_b==self.strat and self.position_b!=0:
                 self.strat=-self.strat_b  
                 
@@ -490,10 +491,10 @@ class ConTrader:
                 self.strat=-1   
                 self.strat_close=1
 
-        if self.score*global_inverse>self.score_b*global_inverse:
+        if self.score*global_inverse>self.score_b*global_inverse and self.gain==self.gain_b and self.loss==self.loss_b:
             self.strat=1
             self.strat_close=-1            
-        elif self.score*global_inverse<self.score_b*global_inverse:
+        elif self.score*global_inverse<self.score_b*global_inverse and self.gain==self.gain_b and self.loss==self.loss_b:
             self.strat=-1
             self.strat_close=1
            
@@ -835,6 +836,10 @@ class ConTrader:
         self.decimal_b=trader.decimal
         self.config_b=trader.config
         self.score_b=trader.score
+
+        self.loss_b=trader.loss
+        self.gain_b=trader.gain
+
         #self.config_b_bol=trader.config_bol
         self.PL_b=trader.PL
         self.instrument_b_obj_reached_buy=trader.objectif_reached_buy(trader.price)
@@ -844,7 +849,7 @@ class ConTrader:
             self.instrument_b=trader.instrument
             self.replacement_b=trader.instrument
 
-        if self.close!=None and self.close_b!=None:
+        if self.close!=None and self.close_b!=None and self.gain==self.gain_b and self.loss==self.loss_b:
             if self.score*global_inverse>self.score_b*global_inverse and self.strat==self.strat_b:
                 self.strat=1
                 self.strat_close=-1
@@ -852,10 +857,10 @@ class ConTrader:
                 self.strat=-1
                 self.strat_close=1
 
-        if self.score*global_inverse>self.score_b*global_inverse:
+        if self.score*global_inverse>self.score_b*global_inverse and self.gain==self.gain_b and self.loss==self.loss_b:
             self.strat=1
             self.strat_close=-1            
-        elif self.score*global_inverse<self.score_b*global_inverse:
+        elif self.score*global_inverse<self.score_b*global_inverse and self.gain==self.gain_b and self.loss==self.loss_b: 
             self.strat=-1
             self.strat_close=1 
                
@@ -1010,7 +1015,6 @@ if __name__ == "__main__":
     trader2.setUnits()
     trader3.setUnits()
     trader4.setUnits()
-    
 
     trader5.setUnits()    
     trader6.setUnits()
@@ -1022,7 +1026,6 @@ if __name__ == "__main__":
     trader2.get_most_recent(correlation_number*correlation_multiplier)
     trader3.get_most_recent(correlation_number*correlation_multiplier)
     trader4.get_most_recent(correlation_number*correlation_multiplier)
-    
 
     trader5.get_most_recent(correlation_number*correlation_multiplier)    
     trader6.get_most_recent(correlation_number*correlation_multiplier)
@@ -1034,7 +1037,6 @@ if __name__ == "__main__":
     trader2.highly_correlate(correlation_number*correlation_multiplier)
     trader3.highly_correlate(correlation_number*correlation_multiplier)
     trader4.highly_correlate(correlation_number*correlation_multiplier)
-    
 
     trader5.highly_correlate(correlation_number*correlation_multiplier)    
     trader6.highly_correlate(correlation_number*correlation_multiplier)
