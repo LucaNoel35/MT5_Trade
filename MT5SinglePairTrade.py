@@ -532,10 +532,10 @@ class ConTrader:
 
     def getEMA(self,df):
         #self.ichimoku(df)
-        df['EMA_5'] = df["c"].ewm(span = 10, min_periods= 10).mean()
-        df['EMA_10'] = df["c"].ewm(span = 20, min_periods= 20).mean()
-        df['config'] = np.where((df['EMA_5']>df['EMA_10'] ) ,1,0) 
-        df['config'] = np.where((df['EMA_5']<df['EMA_10'] ) ,-1,df['config'] )                   
+        df['EMA_5'] = df["c"].ewm(span = 5, min_periods= 5).mean()
+        df['EMA_15'] = df["c"].ewm(span = 15, min_periods= 15).mean()
+        df['config'] = np.where((df['EMA_5']>df['EMA_15'] ) ,1,0) 
+        df['config'] = np.where((df['EMA_5']<df['EMA_15'] ) ,-1,df['config'] )                   
         df['ATR'] = ta.volatility.AverageTrueRange(df['h'],df['l'],df["c"],window=14,fillna=False).average_true_range()   
         self.atr=df["ATR"].iloc[-1]                  
 
