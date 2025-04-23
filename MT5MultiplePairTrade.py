@@ -491,12 +491,12 @@ class ConTrader:
                 self.strat=-1   
                 self.strat_close=1
 
-        if self.score*global_inverse>self.score_b*global_inverse and self.gain==self.gain_b and self.loss==self.loss_b:
-            self.strat=1
-            self.strat_close=-1            
-        elif self.score*global_inverse<self.score_b*global_inverse and self.gain==self.gain_b and self.loss==self.loss_b:
-            self.strat=-1
-            self.strat_close=1
+            if self.score*global_inverse>self.score_b*global_inverse :
+                self.strat=1
+                self.strat_close=-1            
+            elif self.score*global_inverse<self.score_b*global_inverse :
+                self.strat=-1
+                self.strat_close=1
            
         #print(len(positions))
         now = datetime.now(timezone.utc)
@@ -857,12 +857,12 @@ class ConTrader:
                 self.strat=-1
                 self.strat_close=1
 
-        if self.score*global_inverse>self.score_b*global_inverse and self.gain==self.gain_b and self.loss==self.loss_b:
-            self.strat=1
-            self.strat_close=-1            
-        elif self.score*global_inverse<self.score_b*global_inverse and self.gain==self.gain_b and self.loss==self.loss_b: 
-            self.strat=-1
-            self.strat_close=1 
+            if self.score*global_inverse>self.score_b*global_inverse :
+                self.strat=1
+                self.strat_close=-1            
+            elif self.score*global_inverse<self.score_b*global_inverse : 
+                self.strat=-1
+                self.strat_close=1 
                
 
     
