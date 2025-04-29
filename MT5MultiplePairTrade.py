@@ -16,8 +16,8 @@ import time
 
 from datetime import datetime,timezone
 
-nombre =  62602983               
-pwd = 't(N%)Sn9'
+nombre =  62151134               
+pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 
@@ -427,14 +427,14 @@ class ConTrader:
 
 
         df['EMA_5'] = df["c"].ewm(span = 5, min_periods= 5).mean()
-        df['EMA_15'] = df["c"].ewm(span = 15, min_periods= 15).mean()
-        df['EMA_spread']=abs(df['EMA_5']-df['EMA_15'])
+        df['EMA_10'] = df["c"].ewm(span = 10, min_periods= 10).mean()
+        df['EMA_spread']=abs(df['EMA_5']-df['EMA_10'])
         df['EMA_spread_avg']=df["EMA_spread"].ewm(span = 5, min_periods= 5).mean()
         df['EMA_spread_bin']=np.where((df['EMA_spread']>df['EMA_spread_avg'] ),1,0) 
 
         #df['EMA_21'] = df["c"].ewm(span = 21, min_periods= 21).mean()
-        df['config'] = np.where((df['EMA_5']>df['EMA_15'] ),1,0) 
-        df['config'] = np.where((df['EMA_5']<df['EMA_15'] ),-1,df['config'] )                  
+        df['config'] = np.where((df['EMA_5']>df['EMA_10'] ),1,0) 
+        df['config'] = np.where((df['EMA_5']<df['EMA_10'] ),-1,df['config'] )                  
         df['ATR'] = ta.volatility.AverageTrueRange(df['h'],df['l'],df["c"],window=14,fillna=False).average_true_range()   
         self.avg=df["c"].mean()
         self.std=df["c"].std()
@@ -470,34 +470,10 @@ class ConTrader:
                 elif (self.global_equity/self.original_balance)<((1+(total_gain*self.pourcentage))-self.tolerance) and (self.global_equity/self.original_balance)>((1-(total_loss*self.pourcentage))+self.tolerance):
                     self.quota=False
 
-            
             if self.position==0 and self.position_b==0 and self.quota==True and len(positions)==0:
                 self.original_balance=account_info.balance
                 self.price=self.close
-
-        if self.close!=None and self.close_b!=None and self.gain==self.gain_b and self.loss==self.loss_b:
-            if self.strat_b==self.strat and self.position_b!=0:
-                self.strat=-self.strat_b  
-                
-                if self.strat==1:
-                    self.strat_close=-1
-                else:
-                    self.strat_close=1
-                 
-            elif self.strat_b==self.strat and self.position_b==0 and self.score*global_inverse>self.score_b*global_inverse:
-                self.strat=1 
-                self.strat_close=-1
-            elif self.strat_b==self.strat and self.position_b==0 and self.score*global_inverse<self.score_b*global_inverse:
-                self.strat=-1   
-                self.strat_close=1
-
-            if self.score*global_inverse>self.score_b*global_inverse :
-                self.strat=1
-                self.strat_close=-1            
-            elif self.score*global_inverse<self.score_b*global_inverse :
-                self.strat=-1
-                self.strat_close=1
-           
+       
         #print(len(positions))
         now = datetime.now(timezone.utc)
 
@@ -544,6 +520,11 @@ class ConTrader:
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)
+
+                    elif  self.objectif_reached_buy(self.price) and self.position_b == 0 and self.correlation==0 :  
+                        self.price=self.close
+                        self.count=0
+                        self.close_position(positions) 
                                                              
             else :
                 #originally sell position
@@ -566,7 +547,11 @@ class ConTrader:
                         self.price=self.close
                         self.count=0
                         self.close_position(positions) 
-                    
+
+                    elif  self.objectif_reached_sell(self.price) and self.position_b == 0 and self.correlation==0 :  
+                        self.price=self.close
+                        self.count=0
+                        self.close_position(positions)                     
                     #basically change hold position
 
         elif len(positions) == 0:  
@@ -849,7 +834,20 @@ class ConTrader:
             self.instrument_b=trader.instrument
             self.replacement_b=trader.instrument
 
-        if self.close!=None and self.close_b!=None and self.gain==self.gain_b and self.loss==self.loss_b:
+        if self.strat==1 and self.gain>self.gain_b:
+            self.gain = self.gain - 1 
+        elif self.strat==1 and self.loss>self.loss_b:
+            self.loss = self.loss - 1 
+        elif self.strat==-1 and self.gain<self.gain_b:
+            self.gain = self.gain + 1 
+        elif self.strat==-1 and self.loss<self.loss_b:
+            self.loss = self.loss + 1 
+        else:
+            self.gain=self.gain_original
+            self.loss=self.loss_original
+
+        if self.gain==self.gain_b or self.loss==self.loss_b:
+            
             if self.score*global_inverse>self.score_b*global_inverse and self.strat==self.strat_b:
                 self.strat=1
                 self.strat_close=-1
@@ -1000,15 +998,15 @@ if __name__ == "__main__":
         print("initialize() failed")
 
     trader1 = ConTrader( trader1_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader2_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1) 
-    trader2 = ConTrader( trader2_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader1_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1)
+    trader2 = ConTrader( trader2_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader1_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1)
     trader3 = ConTrader( trader3_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader4_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1)
-    trader4 = ConTrader( trader4_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader3_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1)
+    trader4 = ConTrader( trader4_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader3_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1)
     
 
     trader5 = ConTrader( trader5_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader6_instrument,pourcentage=0.02,hedge=1,initialize=-1,beginning=1) 
-    trader6 = ConTrader( trader6_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader5_instrument,pourcentage=0.02,hedge=-1,initialize=-1,beginning=-1)
+    trader6 = ConTrader( trader6_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader5_instrument,pourcentage=0.02,hedge=-1,initialize=-1,beginning=-1)
     trader7 = ConTrader( trader7_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader8_instrument,pourcentage=0.02,hedge=1,initialize=-1,beginning=1)
-    trader8 = ConTrader( trader8_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader7_instrument,pourcentage=0.02,hedge=-1,initialize=-1,beginning=-1)
+    trader8 = ConTrader( trader8_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader7_instrument,pourcentage=0.02,hedge=-1,initialize=-1,beginning=-1)
     
 
     trader1.setUnits()    
@@ -1106,10 +1104,10 @@ if __name__ == "__main__":
     
     while True:
         now = datetime.now(timezone.utc)
-        """
+        
         if now.time() > pd.to_datetime("21:00").time() and now.time() < pd.to_datetime("22:00").time():
             break 
-        """
+        
         
         if trader1.quota==True and trader2.quota==True and trader3.quota==True and trader4.quota==True:
             if trader1.position==0 and trader2.position==0 and trader3.position==0 and trader4.position==0:
