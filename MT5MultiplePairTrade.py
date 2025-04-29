@@ -46,6 +46,7 @@ correlation_number=240
 correlation_multiplier=4
 correlation_divider=2
 global_inverse=-1
+global_change_gain_loss=1
 
 high_correlation_value=0.75
 low_correlation_value=high_correlation_value/3
@@ -834,34 +835,26 @@ class ConTrader:
             self.instrument_b=trader.instrument
             self.replacement_b=trader.instrument
 
-        if self.strat==1 and self.gain>self.gain_b:
-            self.gain = self.gain - 1 
-        elif self.strat==1 and self.loss>self.loss_b:
-            self.loss = self.loss - 1 
-        elif self.strat==-1 and self.gain<self.gain_b:
-            self.gain = self.gain + 1 
-        elif self.strat==-1 and self.loss<self.loss_b:
-            self.loss = self.loss + 1 
-        else:
-            self.gain=self.gain_original
-            self.loss=self.loss_original
-
-        if self.gain==self.gain_b or self.loss==self.loss_b:
-            
-            if self.score*global_inverse>self.score_b*global_inverse and self.strat==self.strat_b:
-                self.strat=1
-                self.strat_close=-1
-            elif self.score*global_inverse<self.score_b*global_inverse and self.strat==self.strat_b:
-                self.strat=-1
-                self.strat_close=1
-
+        if global_change_gain_loss==1 or (self.gain==self.gain_b or self.loss==self.loss_b) or self.strat==self.strat_b:
             if self.score*global_inverse>self.score_b*global_inverse :
                 self.strat=1
-                self.strat_close=-1            
-            elif self.score*global_inverse<self.score_b*global_inverse : 
+                self.strat_close=-1
+            elif self.score*global_inverse<self.score_b*global_inverse:
                 self.strat=-1
-                self.strat_close=1 
-               
+                self.strat_close=1
+            
+        if  (self.strat==1 and (self.gain*global_inverse<=self.gain_b*global_inverse or self.loss*global_inverse<=self.loss_b*global_inverse)) or (self.strat==-1 and (self.gain*global_inverse>=self.gain_b*global_inverse or self.loss*global_inverse>=self.loss_b*global_inverse)):    
+            if self.strat==1 and self.gain*global_inverse<self.gain_b*global_inverse and self.gain*global_inverse<1*global_inverse:
+                self.gain = self.gain+1*global_inverse
+            elif self.strat==1 and self.loss*global_inverse<=self.loss_b*global_inverse and self.loss*global_inverse<1*global_inverse:
+                self.loss = self.loss+1*global_inverse
+            elif self.strat==-1 and self.gain*global_inverse>=self.gain_b*global_inverse and self.gain*global_inverse>=1*global_inverse: 
+                self.gain = self.gain-1*global_inverse
+            elif self.strat==-1 and self.loss*global_inverse>self.loss_b*global_inverse and self.loss*global_inverse>1*global_inverse:
+                self.loss = self.loss-1*global_inverse
+            elif self.position_b==0 or self.position==0:
+                self.gain=self.gain_original
+                self.loss=self.loss_original
 
     
     def emergency_change_instrument(self,Watchlist,ls):
