@@ -13,8 +13,8 @@ import ta
 
 from datetime import datetime,timezone
 
-nombre =  62602983               
-pwd = 't(N%)Sn9'
+nombre =  62162715               
+pwd = 'HDvp9*kS'
 server_name = 'OANDATMS-MT5'
 
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
