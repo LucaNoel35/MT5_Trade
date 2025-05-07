@@ -1,4 +1,5 @@
 
+
 """
 Created on Tue Nov  1 17:33:14 2022
 
@@ -16,8 +17,8 @@ import time
 
 from datetime import datetime,timezone
 
-nombre =  62162715               
-pwd = 'HDvp9*kS'
+nombre =  62728872               
+pwd = 'Za6Ya&Tk'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 
@@ -1587,14 +1588,14 @@ class ConTrader:
 
 
         df['EMA_5'] = df["c"].ewm(span = 5, min_periods= 5).mean()
-        df['EMA_10'] = df["c"].ewm(span = 10, min_periods= 10).mean()
-        df['EMA_spread']=abs(df['EMA_5']-df['EMA_10'])
+        df['EMA_15'] = df["c"].ewm(span = 15, min_periods= 15).mean()
+        df['EMA_spread']=abs(df['EMA_5']-df['EMA_15'])
         df['EMA_spread_avg']=df["EMA_spread"].ewm(span = 5, min_periods= 5).mean()
         df['EMA_spread_bin']=np.where((df['EMA_spread']>df['EMA_spread_avg'] ),1,0) 
 
         #df['EMA_21'] = df["c"].ewm(span = 21, min_periods= 21).mean()
-        df['config'] = np.where((df['EMA_5']>df['EMA_10'] ),1,0) 
-        df['config'] = np.where((df['EMA_5']<df['EMA_10'] ),-1,df['config'] )                  
+        df['config'] = np.where((df['EMA_5']>df['EMA_15'] ),1,0) 
+        df['config'] = np.where((df['EMA_5']<df['EMA_15'] ),-1,df['config'] )                  
         df['ATR'] = ta.volatility.AverageTrueRange(df['h'],df['l'],df["c"],window=14,fillna=False).average_true_range()   
         self.avg=df["c"].mean()
         self.std=df["c"].std()
@@ -1996,14 +1997,13 @@ class ConTrader:
             self.instrument_b=trader.instrument
             self.replacement_b=trader.instrument
 
-        if (self.score*global_inverse<self.score_b*global_inverse and self.gain==self.gain_b and self.loss == self.loss_b) :
+        if (self.close*global_inverse>self.close_b*global_inverse and self.gain==self.gain_b and self.loss == self.loss_b) :
             self.strat=1
             self.strat_close=-1
-        elif (self.score*global_inverse>self.score_b*global_inverse and self.gain==self.gain_b and self.loss == self.loss_b) :
+        elif (self.close*global_inverse<self.close_b*global_inverse and self.gain==self.gain_b and self.loss == self.loss_b) :
             self.strat=-1
             self.strat_close=1
 
-    
     def emergency_change_instrument(self,Watchlist,ls):
         if (self.instrument in ls) and self.position==0:
             temp=random.choice(Watchlist)
@@ -2288,13 +2288,11 @@ if __name__ == "__main__":
             trader3_instrument=trader3.instrument
             trader4_instrument=trader4.instrument
             
-
             trader5_instrument=trader5.instrument
             trader6_instrument=trader6.instrument
             trader7_instrument=trader7.instrument
             trader8_instrument=trader8.instrument
             
-
             trader1.place_info(trader2)
             trader2.place_info(trader1)
             trader3.place_info(trader4)
