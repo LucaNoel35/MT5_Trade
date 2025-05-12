@@ -511,7 +511,7 @@ class ConTrader:
   
                 if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.position_b==-1) or self.position_b!=-1:
                     
-                    if  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price) and ((self.close*global_inverse>self.price*global_inverse and self.instrument_b_obj_reached_sell and self.config_b==1*self.strat_close) or self.close*global_inverse<self.price*global_inverse ) and self.position_b ==-1:  
+                    if  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price) and ((self.close*global_inverse>self.price*global_inverse and self.instrument_b_obj_reached_sell and self.config_b==-1*self.strat_close) or self.close*global_inverse<self.price*global_inverse ) and self.position_b ==-1:  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)
@@ -520,11 +520,12 @@ class ConTrader:
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)
-                    
+                    """
                     elif  self.objectif_reached_buy(self.price) and self.position_b == 0 and self.correlation==0 and self.replacement_b==self.instrument_b:  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions) 
+                    """
                     
                                                              
             else :
@@ -539,7 +540,7 @@ class ConTrader:
 
                 if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.position_b==1) or self.position_b!=1:
                     
-                    if   (self.config==-1*self.strat_close)  and self.objectif_reached_sell(self.price)  and ((self.close*global_inverse<self.price*global_inverse and self.instrument_b_obj_reached_buy and self.config_b==-1*self.strat_close) or self.close*global_inverse>self.price*global_inverse ) and self.position_b ==1 :  
+                    if   (self.config==-1*self.strat_close)  and self.objectif_reached_sell(self.price)  and ((self.close*global_inverse<self.price*global_inverse and self.instrument_b_obj_reached_buy and self.config_b==1*self.strat_close) or self.close*global_inverse>self.price*global_inverse ) and self.position_b ==1 :  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions) 
@@ -548,11 +549,12 @@ class ConTrader:
                         self.price=self.close
                         self.count=0
                         self.close_position(positions) 
-                    
+                    """
                     elif  self.objectif_reached_sell(self.price) and self.position_b == 0 and self.correlation==0 and self.replacement_b==self.instrument_b:  
                         self.price=self.close
                         self.count=0
-                        self.close_position(positions)                     
+                        self.close_position(positions)   
+                    """                  
                     #basically change hold position
                     
 
