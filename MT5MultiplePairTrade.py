@@ -17,8 +17,8 @@ import time
 
 from datetime import datetime,timezone
 
-nombre =  62740910               
-pwd = '3PFw=ag='
+nombre =  62151134               
+pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 
@@ -835,13 +835,15 @@ class ConTrader:
         if trader.instrument!=self.instrument_b:
             self.instrument_b=trader.instrument
             self.replacement_b=trader.instrument
-
+        
+        """
         if (self.close*global_inverse>self.close_b*global_inverse and self.gain==self.gain_b and self.loss == self.loss_b) :
             self.strat=1
             self.strat_close=-1
         elif (self.close*global_inverse<self.close_b*global_inverse and self.gain==self.gain_b and self.loss == self.loss_b) :
             self.strat=-1
             self.strat_close=1
+        """
 
     
     def emergency_change_instrument(self,Watchlist,ls):
@@ -987,7 +989,6 @@ if __name__ == "__main__":
     trader7 = ConTrader( trader7_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader8_instrument,pourcentage=0.02,hedge=1,initialize=-1,beginning=1)
     trader8 = ConTrader( trader8_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader7_instrument,pourcentage=0.02,hedge=-1,initialize=-1,beginning=-1)
     
-
     trader1.setUnits()    
     trader2.setUnits()
     trader3.setUnits()
@@ -998,7 +999,6 @@ if __name__ == "__main__":
     trader7.setUnits()
     trader8.setUnits()
     
-
     trader1.get_most_recent(correlation_number*correlation_multiplier)    
     trader2.get_most_recent(correlation_number*correlation_multiplier)
     trader3.get_most_recent(correlation_number*correlation_multiplier)
