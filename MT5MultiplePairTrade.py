@@ -520,7 +520,12 @@ class ConTrader:
                     elif  (self.config==1*self.strat_close)  and ((self.objectif_reached_buy(self.price) and self.strat_close==-1) or (self.strat_close==1 and self.config_b==1*self.strat_close) )  and self.position_b!=-1:  
                         self.price=self.close
                         self.count=0
-                        self.close_position(positions)                                                                                                                       
+                        self.close_position(positions)  
+
+                    elif  self.objectif_reached_buy(self.price) and self.correlation==0 and self.position_b==0 and self.instrument_b==self.replacement_b:  
+                        self.price=self.close
+                        self.count=0
+                        self.close_position(positions)                                                                                                                    
             else :
                 #originally sell position
                 self.PL=positions[0].profit
@@ -540,6 +545,11 @@ class ConTrader:
                     #basically change hold position
                     
                     elif  (self.config==-1*self.strat_close)  and ((self.objectif_reached_sell(self.price) and self.strat_close==-1) or (self.strat_close==1 and self.config_b==-1*self.strat_close) ) and self.position_b!=1:  
+                        self.price=self.close
+                        self.count=0
+                        self.close_position(positions) 
+
+                    elif  self.objectif_reached_sell(self.price) and self.correlation==0 and self.position_b==0 and self.instrument_b==self.replacement_b:  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)                    
