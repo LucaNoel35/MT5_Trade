@@ -517,7 +517,7 @@ class ConTrader:
                         self.count=0
                         self.close_position(positions)
 
-                    elif  (self.config==1*self.strat_close)  and ((self.objectif_reached_buy(self.price) and self.strat_close==-1) or (self.strat_close==1 and self.config_b==1*self.strat_close) )  and self.position_b!=-1:  
+                    elif  (self.config==1*self.strat_close)  and ((self.objectif_reached_buy(self.price) and self.close*global_inverse<self.price*global_inverse) or (self.close*global_inverse>self.price*global_inverse and self.config_b==1*self.strat_close) )  and self.position_b!=-1:  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)  
@@ -544,7 +544,7 @@ class ConTrader:
                         self.close_position(positions)                                                         
                     #basically change hold position
                     
-                    elif  (self.config==-1*self.strat_close)  and ((self.objectif_reached_sell(self.price) and self.strat_close==-1) or (self.strat_close==1 and self.config_b==-1*self.strat_close) ) and self.position_b!=1:  
+                    elif  (self.config==-1*self.strat_close)  and ((self.objectif_reached_sell(self.price) and self.close*global_inverse>self.price*global_inverse) or ( self.close*global_inverse<self.price*global_inverse and self.config_b==-1*self.strat_close)) and self.position_b!=1:  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions) 
