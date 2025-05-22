@@ -37,7 +37,7 @@ add_spread=1
 apply_quota=0
 apply_spread_avg=0
 global_leverage=16
-global_inverse=1
+global_inverse=-1
 
 value_spread_multiplier=10
 
@@ -517,7 +517,7 @@ class ConTrader:
                         self.count=0
                         self.close_position(positions)
 
-                    elif  (self.config==1*self.strat_close)  and ((self.objectif_reached_buy(self.price) and self.close*global_inverse<self.price*global_inverse) or (self.close*global_inverse>self.price*global_inverse and self.config_b==1*self.strat_close) )  and self.position_b!=-1:  
+                    elif  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price)  and self.position_b!=-1:  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)  
@@ -544,7 +544,7 @@ class ConTrader:
                         self.close_position(positions)                                                         
                     #basically change hold position
                     
-                    elif  (self.config==-1*self.strat_close)  and ((self.objectif_reached_sell(self.price) and self.close*global_inverse>self.price*global_inverse) or ( self.close*global_inverse<self.price*global_inverse and self.config_b==-1*self.strat_close)) and self.position_b!=1:  
+                    elif  (self.config==-1*self.strat_close)  and self.objectif_reached_sell(self.price)  and self.position_b!=1:  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions) 
@@ -833,14 +833,13 @@ class ConTrader:
             self.instrument_b=trader.instrument
             self.replacement_b=trader.instrument
         
-        """
-        if (self.close*global_inverse>self.close_b*global_inverse and self.gain==self.gain_b and self.loss == self.loss_b) :
+        if (self.score*global_inverse<self.score_b*global_inverse and self.gain==self.gain_b and self.loss == self.loss_b) :
             self.strat=1
             self.strat_close=-1
-        elif (self.close*global_inverse<self.close_b*global_inverse and self.gain==self.gain_b and self.loss == self.loss_b) :
+        elif (self.score*global_inverse>self.score_b*global_inverse and self.gain==self.gain_b and self.loss == self.loss_b) :
             self.strat=-1
             self.strat_close=1
-        """
+        
 
     
     def emergency_change_instrument(self,Watchlist,ls):
