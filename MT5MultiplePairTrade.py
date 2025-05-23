@@ -37,7 +37,7 @@ add_spread=1
 apply_quota=0
 apply_spread_avg=0
 global_leverage=16
-global_inverse=-1
+global_inverse=1
 
 value_spread_multiplier=10
 
@@ -512,7 +512,7 @@ class ConTrader:
                 if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.position_b==-1) or self.position_b!=-1:
 
 
-                    if  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price) and self.config_b==1*self.strat_close and (( self.instrument_b_obj_reached_sell and self.close*global_inverse>self.price*global_inverse) or self.close*global_inverse<self.price*global_inverse) and self.position_b==-1:  
+                    if  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price) and self.config_b==1*self.strat_close and ((self.instrument_b_obj_reached_sell and self.close*global_inverse*self.strat_close>self.price*global_inverse*self.strat_close) or self.close*global_inverse*self.strat_close<self.price*global_inverse*self.strat_close) and self.position_b==-1:  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)
@@ -538,7 +538,7 @@ class ConTrader:
 
                 if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.position_b==1) or self.position_b!=1:
  
-                    if  (self.config==-1*self.strat_close)  and self.objectif_reached_sell(self.price) and self.config_b==-1*self.strat_close and  ((self.instrument_b_obj_reached_buy and self.close*global_inverse<self.price*global_inverse) or self.close*global_inverse>self.price*global_inverse) and self.position_b==1:  
+                    if  (self.config==-1*self.strat_close)  and self.objectif_reached_sell(self.price) and self.config_b==-1*self.strat_close and  ((self.instrument_b_obj_reached_buy and self.close*global_inverse*self.strat_close<self.price*global_inverse*self.strat_close) or self.close*global_inverse*self.strat_close>self.price*global_inverse*self.strat_close) and self.position_b==1:  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)                                                         
@@ -832,13 +832,14 @@ class ConTrader:
         if trader.instrument!=self.instrument_b:
             self.instrument_b=trader.instrument
             self.replacement_b=trader.instrument
-        
+        """
         if (self.score*global_inverse<self.score_b*global_inverse and self.gain==self.gain_b and self.loss == self.loss_b) :
             self.strat=1
             self.strat_close=-1
         elif (self.score*global_inverse>self.score_b*global_inverse and self.gain==self.gain_b and self.loss == self.loss_b) :
             self.strat=-1
             self.strat_close=1
+        """
         
 
     
