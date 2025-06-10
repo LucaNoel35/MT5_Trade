@@ -17,8 +17,8 @@ import time
 
 from datetime import datetime,timezone
 
-nombre =  62601119               
-pwd = 'Dovakhin35*'
+nombre =  62151134               
+pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 
@@ -37,7 +37,7 @@ add_spread=1
 apply_quota=0
 apply_spread_avg=0
 global_leverage=16
-global_inverse=-1
+global_inverse=1
 
 value_spread_multiplier=10
 
@@ -93,6 +93,8 @@ class ConTrader:
         self.decimal_b=decimal
         self.strat=strat
         self.strat_close=strat_close
+        self.strat_org=strat
+        self.strat_close_org=strat_close
         self.strat_b=strat
         self.strat_close_b=strat_close
         self.position = 0
@@ -517,7 +519,7 @@ class ConTrader:
                         self.count=0
                         self.close_position(positions)
 
-                    elif  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price)  and (self.position_b!=-1 or self.safe==1):  
+                    elif  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price)  and (self.position_b!=-1 ):  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)  
@@ -833,14 +835,13 @@ class ConTrader:
         if trader.instrument!=self.instrument_b:
             self.instrument_b=trader.instrument
             self.replacement_b=trader.instrument
-        """
-        if (self.score*global_inverse<self.score_b*global_inverse and self.gain==self.gain_b and self.loss == self.loss_b) :
-            self.strat=1
-            self.strat_close=-1
-        elif (self.score*global_inverse>self.score_b*global_inverse and self.gain==self.gain_b and self.loss == self.loss_b) :
-            self.strat=-1
-            self.strat_close=1
-        """
+        
+        if (self.position==self.position_b and (self.strat==self.strat_b or self.strat_close==self.strat_close_b)) :
+            self.strat=-self.strat_b
+            self.strat_close=-self.strat_close_b
+        else:
+            self.strat=self.strat_org
+            self.strat_close=self.strat_close_org
         
 
     
@@ -935,7 +936,6 @@ Don't forget to modify correlation matrix function to take into account all trad
 Go to line 58 to add more instrument names
 
 Seperate into several watch list if needed
-
 """
 
 #not used in the end
@@ -977,15 +977,15 @@ if __name__ == "__main__":
     if not mt5.initialize(login = nombre, password = pwd, server = server_name, path = path_name):
         print("initialize() failed")
 
-    trader1 = ConTrader( trader1_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=2,loss=1,space=0,instrument_b=trader2_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=-1) 
-    trader2 = ConTrader( trader2_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader1_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=1)
-    trader3 = ConTrader( trader3_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=2,loss=1,space=0,instrument_b=trader4_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=-1)
-    trader4 = ConTrader( trader4_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader3_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=1)
+    trader1 = ConTrader( trader1_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader2_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=-1) 
+    trader2 = ConTrader( trader2_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader1_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=-1)
+    trader3 = ConTrader( trader3_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader4_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=-1)
+    trader4 = ConTrader( trader4_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader3_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=-1)
     
-    trader5 = ConTrader( trader5_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=2,loss=1,space=0,instrument_b=trader6_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=-1) 
-    trader6 = ConTrader( trader6_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader5_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=1)
-    trader7 = ConTrader( trader7_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=2,loss=1,space=0,instrument_b=trader8_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=-1)
-    trader8 = ConTrader( trader8_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader7_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=1)
+    trader5 = ConTrader( trader5_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader6_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=-1) 
+    trader6 = ConTrader( trader6_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader5_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=-1)
+    trader7 = ConTrader( trader7_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader8_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=-1)
+    trader8 = ConTrader( trader8_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader7_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=-1)
     #gain*mid_level and loss*mid_level -> ref
     trader1.setUnits()    
     trader2.setUnits()
@@ -1024,7 +1024,6 @@ if __name__ == "__main__":
     print("correlation ",trader3.instrument,trader3.correlation)
     print("correlation ",trader4.instrument,trader4.correlation)
     
-
     print("correlation ",trader5.instrument,trader5.correlation)
     print("correlation ",trader6.instrument,trader6.correlation)
     print("correlation ",trader7.instrument,trader7.correlation)
@@ -1072,7 +1071,6 @@ if __name__ == "__main__":
     thread3=trader3.runTrade()
     thread4=trader4.runTrade()
     
-
     thread5=trader5.runTrade()   
     thread6=trader6.runTrade()
     thread7=trader7.runTrade()
@@ -1102,18 +1100,15 @@ if __name__ == "__main__":
                 correlation_matrix(trader1,trader2,[trader3_instrument,trader4_instrument],Watch_List)
                 #print("Replacement for trader 1 and 2 necessary")
 
-
             if (trader3.correlation==0 and trader3.replacement==trader3.instrument) or (trader4.correlation==0 and trader4.replacement==trader4.instrument) :
                 #trader3.random_change_instrument(trader2,trader1,Watch_List)
                 correlation_matrix(trader3,trader4,[trader2_instrument,trader1_instrument],Watch_List)
                 #print("Replacement for trader 3 and 4 necessary")
             
-
             if (trader5.correlation==0 and trader5.replacement==trader1.instrument) or (trader6.correlation==0 and trader6.replacement==trader6.instrument):
                 #trader1.random_change_instrument(trader2,trader3,Watch_List)
                 correlation_matrix(trader5,trader6,[trader7_instrument,trader8_instrument],Watch_List_2)
                 #print("Replacement for trader 1 and 2 necessary")
-
 
             if (trader7.correlation==0 and trader7.replacement==trader7.instrument) or (trader8.correlation==0 and trader8.replacement==trader8.instrument) :
                 #trader3.random_change_instrument(trader2,trader1,Watch_List)
