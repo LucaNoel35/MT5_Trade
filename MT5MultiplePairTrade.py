@@ -37,7 +37,7 @@ add_spread=1
 apply_quota=0
 apply_spread_avg=0
 global_leverage=16
-global_inverse=1
+global_inverse=-1
 
 value_spread_multiplier=10
 
@@ -155,6 +155,8 @@ class ConTrader:
         self.val=value_spread_multiplier*minimal_pip_multiplier*self.pip
         self.val_instant=value_spread_multiplier*minimal_pip_multiplier*self.pip
         self.price=None
+        self.price_b=None
+
         self.avg_space=0
 
         self.quota=False
@@ -818,6 +820,7 @@ class ConTrader:
         self.strat_b=trader.strat
         self.strat_close_b=trader.strat_close
         self.close_b=trader.close
+        self.price_b=trader.price
         self.hedge_b=trader.hedge
         self.pip_b=trader.pip
         self.decimal_b=trader.decimal
@@ -836,14 +839,14 @@ class ConTrader:
             self.instrument_b=trader.instrument
             self.replacement_b=trader.instrument
         
-        if (self.position==self.position_b and (self.strat==self.strat_b or self.strat_close==self.strat_close_b)) :
+        if (self.position==self.position_b and abs(self.close-self.price)>self.val/2 and (self.strat==self.strat_b or self.strat_close==self.strat_close_b)) :
             self.strat=-self.strat_b
             self.strat_close=-self.strat_close_b
-        else:
+
+        elif self.position!=self.position_b:
             self.strat=self.strat_org
             self.strat_close=self.strat_close_org
         
-
     
     def emergency_change_instrument(self,Watchlist,ls):
         if (self.instrument in ls) and self.position==0:
