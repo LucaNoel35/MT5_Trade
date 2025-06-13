@@ -37,7 +37,7 @@ add_spread=1
 apply_quota=0
 apply_spread_avg=0
 global_leverage=16
-global_inverse=-1
+global_inverse=1
 
 value_spread_multiplier=10
 
@@ -521,7 +521,7 @@ class ConTrader:
                         self.count=0
                         self.close_position(positions)
 
-                    elif  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price)  and (self.position_b!=-1 ):  
+                    elif  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price)  and (self.position_b!=-1 or self.safe==1):  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)  
@@ -838,15 +838,7 @@ class ConTrader:
         if trader.instrument!=self.instrument_b:
             self.instrument_b=trader.instrument
             self.replacement_b=trader.instrument
-        
-        if (self.position==self.position_b and abs(self.close-self.price)>self.val/2 and (self.strat==self.strat_b or self.strat_close==self.strat_close_b)) :
-            self.strat=-self.strat_b
-            self.strat_close=-self.strat_close_b
 
-        elif self.position!=self.position_b:
-            self.strat=self.strat_org
-            self.strat_close=self.strat_close_org
-        
     
     def emergency_change_instrument(self,Watchlist,ls):
         if (self.instrument in ls) and self.position==0:
@@ -980,15 +972,15 @@ if __name__ == "__main__":
     if not mt5.initialize(login = nombre, password = pwd, server = server_name, path = path_name):
         print("initialize() failed")
 
-    trader1 = ConTrader( trader1_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader2_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=-1) 
-    trader2 = ConTrader( trader2_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader1_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=-1)
-    trader3 = ConTrader( trader3_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader4_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=-1)
-    trader4 = ConTrader( trader4_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader3_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=-1)
+    trader1 = ConTrader( trader1_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=2,space=0,instrument_b=trader2_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=-1) 
+    trader2 = ConTrader( trader2_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader1_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=1)
+    trader3 = ConTrader( trader3_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=2,space=0,instrument_b=trader4_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=-1)
+    trader4 = ConTrader( trader4_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader3_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=1)
     
-    trader5 = ConTrader( trader5_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader6_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=-1) 
-    trader6 = ConTrader( trader6_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader5_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=-1)
-    trader7 = ConTrader( trader7_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader8_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=-1)
-    trader8 = ConTrader( trader8_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1,loss=1,space=0,instrument_b=trader7_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=-1)
+    trader5 = ConTrader( trader5_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=2,space=0,instrument_b=trader6_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=-1) 
+    trader6 = ConTrader( trader6_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader5_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=1)
+    trader7 = ConTrader( trader7_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=2,space=0,instrument_b=trader8_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=-1)
+    trader8 = ConTrader( trader8_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader7_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=1)
     #gain*mid_level and loss*mid_level -> ref
     trader1.setUnits()    
     trader2.setUnits()
