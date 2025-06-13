@@ -1001,7 +1001,6 @@ if __name__ == "__main__":
     trader6.get_most_recent(correlation_number*correlation_multiplier)
     trader7.get_most_recent(correlation_number*correlation_multiplier)
     trader8.get_most_recent(correlation_number*correlation_multiplier)
-    
 
     trader1.highly_correlate(correlation_number*correlation_multiplier)    
     trader2.highly_correlate(correlation_number*correlation_multiplier)
