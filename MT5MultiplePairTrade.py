@@ -44,7 +44,7 @@ value_spread_multiplier=10
 minimal_pip_multiplier=20
 minimal_avg_pip_multiplier=25
 
-correlation_number=60
+correlation_number=120
 correlation_multiplier=4
 correlation_divider=2
 
