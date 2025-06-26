@@ -262,7 +262,7 @@ class ConTrader:
 
                 if  previous_time!=self.last_bar  :   
                     previous_time= self.last_bar     
-                    phrasing="\n {} {} {} correlation {} gain {} loss {} strat {} hedge {} \n".format(self.last_bar, self.instrument, self.instrument_b, self.correlation , self.gain, self.loss , self.strat, self.hedge)             
+                    phrasing="\n {} {} {} correlation {} gain {} loss {} strat {} hedge {} position {} position_b {}\n".format(self.last_bar, self.instrument, self.instrument_b, self.correlation , self.gain, self.loss , self.strat, self.hedge , self.position, self.position_b)             
                     print(phrasing)
                     if (self.replacement!=self.instrument):
                         warning_phrase="\n {} still not replaced by {} \n".format(self.instrument, self.replacement)
@@ -516,7 +516,7 @@ class ConTrader:
                 if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.position_b==-1) or self.position_b!=-1:
 
 
-                    if  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price) and self.config_b==1*self.strat_close and ((self.instrument_b_obj_reached_sell and self.close*self.inverse*self.strat_close>self.price*self.inverse*self.strat_close) or self.close*self.inverse*self.strat_close<self.price*self.inverse*self.strat_close) and (self.position_b==-1 and self.safe==-1):  
+                    if  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price) and self.config_b==1*self.strat_close and ((self.instrument_b_obj_reached_sell and self.close*self.inverse>self.price*self.inverse) or self.close*self.inverse<self.price*self.inverse) and (self.position_b==-1 and self.safe==-1):  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)
@@ -525,7 +525,7 @@ class ConTrader:
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)  
-
+                    
                     elif  self.objectif_reached_buy(self.price) and self.correlation==0 and self.position_b==0 and self.instrument_b==self.replacement_b:  
                         self.price=self.close
                         self.count=0
@@ -543,7 +543,7 @@ class ConTrader:
 
                 if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.position_b==1) or self.position_b!=1:
  
-                    if  (self.config==-1*self.strat_close)  and self.objectif_reached_sell(self.price) and self.config_b==-1*self.strat_close and  ((self.instrument_b_obj_reached_buy and self.close*self.inverse*self.strat_close<self.price*self.inverse*self.strat_close) or self.close*self.inverse*self.strat_close>self.price*self.inverse*self.strat_close) and (self.position_b==1 and self.safe==-1):  
+                    if  (self.config==-1*self.strat_close)  and self.objectif_reached_sell(self.price) and self.config_b==-1*self.strat_close and  ((self.instrument_b_obj_reached_buy and self.close*self.inverse<self.price*self.inverse) or self.close*self.inverse>self.price*self.inverse) and (self.position_b==1 and self.safe==-1):  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)                                                         
@@ -560,8 +560,6 @@ class ConTrader:
                         self.close_position(positions)                    
 
         elif len(positions) == 0:  
-            self.position=0
-            self.PL=0
             self.count+=1
             timing=True
             if now.time() > pd.to_datetime("20:45").time() and now.time() < pd.to_datetime("22:15").time() :
@@ -572,6 +570,10 @@ class ConTrader:
                 self.max_level=df["h"].max()
                 self.min_level=df["l"].min()
                 
+            if self.count>5:
+                self.position=0
+                self.PL=0    
+
             if  self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip and timing and self.correlation==1 and self.quota==False and ((self.count>5 and self.beginning!=1) or self.beginning==1): 
                 
                 if  ((self.config==-1*self.strat and (self.avg_space==1 or apply_spread_avg==0) and (self.beginning!=1)) or (self.beginning==1 and self.position_b==1)) and (abs(self.close-self.price)>self.space*self.val or self.initialize==1) :
@@ -973,14 +975,14 @@ if __name__ == "__main__":
         print("initialize() failed")
 
     trader1 = ConTrader( trader1_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=2,loss=1,space=0,instrument_b=trader2_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=-1,inverse=-1) 
-    trader2 = ConTrader( trader2_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader1_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=-1,inverse=1)
+    trader2 = ConTrader( trader2_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader1_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=1,inverse=1)
     trader3 = ConTrader( trader3_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=2,loss=1,space=0,instrument_b=trader4_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=-1,inverse=-1)
-    trader4 = ConTrader( trader4_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader3_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=-1,inverse=1)
+    trader4 = ConTrader( trader4_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader3_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=1,inverse=1)
     
     trader5 = ConTrader( trader5_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=2,loss=1,space=0,instrument_b=trader6_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=-1,inverse=-1) 
-    trader6 = ConTrader( trader6_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader5_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=-1,inverse=1)
+    trader6 = ConTrader( trader6_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader5_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=1,inverse=1)
     trader7 = ConTrader( trader7_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=2,loss=1,space=0,instrument_b=trader8_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=-1,inverse=-1)
-    trader8 = ConTrader( trader8_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader7_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=-1,inverse=1)
+    trader8 = ConTrader( trader8_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader7_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=1,inverse=1)
     #gain*mid_level and loss*mid_level -> ref
     trader1.setUnits()    
     trader2.setUnits()
