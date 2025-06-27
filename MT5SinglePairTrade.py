@@ -422,8 +422,8 @@ class ConTrader:
         previous_time=self.last_bar
         val=max(value_spread_multiplier*self.spread,self.atr) 
 
-        self.execute_trades(1,-1,"price_1","price_2","position_1","position_2",self.loss,self.gain,-1,1,1)
-        self.execute_trades(-1,1,"price_2","price_1","position_2","position_1",self.mid_value,self.loss,-1,1,-1)      
+        self.execute_trades(1,-1,"price_1","price_2","position_1","position_2",self.gain,self.loss,-1,1,-1)
+        self.execute_trades(-1,1,"price_2","price_1","position_2","position_1",self.gain,self.loss,-1,1,-1)      
         #self.execute_trades(-1,1,"price_3","position_3",self.mid_value,self.loss,-1,1)
         #self.execute_trades(-1,1,"price_4","position_4",self.gain,self.gain,-1,1)
         if self.gain>self.loss:
@@ -438,8 +438,8 @@ class ConTrader:
                 self.prepare_data()
                 val=max(value_spread_multiplier*self.spread,self.atr) 
                 if self.positions!=None:
-                    self.execute_trades(1,-1,"price_1","price_2","position_1","position_2",self.loss,self.gain,-1,1,1)
-                    self.execute_trades(-1,1,"price_2","price_1","position_2","position_1",self.mid_value,self.loss,-1,1,-1)        
+                    self.execute_trades(1,-1,"price_1","price_2","position_1","position_2",self.gain,self.loss,-1,1,-1)
+                    self.execute_trades(-1,1,"price_2","price_1","position_2","position_1",self.gain,self.loss,-1,1,-1)        
                     #self.execute_trades(-1,1,"price_3","position_3",self.mid_value,self.loss,-1,1)
                     #self.execute_trades(-1,1,"price_4","position_4",self.gain,self.gain,-1,1)
                 self.val=val
@@ -682,7 +682,7 @@ class ConTrader:
                     if (position.type==0) and (position_taken==1):
                     #originally buy position     
                    
-                        if   (strat!=strat_close or hold_invertible==False) and (df.at[ls[-1],"config"]==1*strat_close) and (position_taken_2==-1 and safe==-1)  and ((self.close*self.inverse<self.inverse*price and self.objectif_reached_sell(price_2,loss,loss,mode_close)) or self.close*self.inverse>price*self.inverse) and self.objectif_reached_buy(price,gain,gain,mode_close)  :  
+                        if   (strat!=strat_close or hold_invertible==False) and (df.at[ls[-1],"config"]==1*strat_close) and (position_taken_2==-1 and safe==-1)  and ((self.close*self.inverse*strat_close<self.inverse*price*strat_close and self.objectif_reached_sell(price_2,loss,loss,mode_close)) or self.close*self.inverse*strat_close>price*self.inverse*strat_close) and self.objectif_reached_buy(price,gain,gain,mode_close)  :  
                             #price=self.close
                             self.close_buy_position(position)   
                             position_taken=0
@@ -712,7 +712,7 @@ class ConTrader:
                     if (position.type!=0) and (position_taken==-1):
                     #originally sell position    
 
-                        if  (strat!=strat_close or hold_invertible==False) and (df.at[ls[-1],"config"]==-1*strat_close)  and (position_taken_2==1 and safe==-1)  and ((self.close*self.inverse>price*self.inverse and self.objectif_reached_buy(price_2,gain,loss,mode_close)) or self.close*self.inverse<price*self.inverse) and self.objectif_reached_sell(price,gain,gain,mode_close) :  
+                        if  (strat!=strat_close or hold_invertible==False) and (df.at[ls[-1],"config"]==-1*strat_close)  and (position_taken_2==1 and safe==-1)  and ((self.close*self.inverse*strat_close>price*self.inverse*strat_close and self.objectif_reached_buy(price_2,gain,loss,mode_close)) or self.close*self.inverse*strat_close<price*self.inverse*strat_close) and self.objectif_reached_sell(price,gain,gain,mode_close) :  
                             #price=self.close
                             self.close_sell_position(position)   
                             position_taken=0
@@ -907,16 +907,16 @@ if __name__ == "__main__":
         print("initialize() failed")
 
     trader1 = ConTrader( trader1_instrument, pip=0.001,decimal=3,gain=2,loss=1,space=0,pourcentage=global_percentage,weight=Weight1)    
-    trader2 = ConTrader( trader2_instrument, pip=0.001,decimal=3,gain=2,loss=1,space=0,pourcentage=global_percentage,weight=Weight2) 
+    trader2 = ConTrader( trader2_instrument, pip=0.001,decimal=3,gain=1,loss=2,space=0,pourcentage=global_percentage,weight=Weight2) 
 
     trader3 = ConTrader( trader3_instrument, pip=0.00001,decimal=5,gain=2,loss=1,space=0,pourcentage=global_percentage,weight=Weight3)    
-    trader4 = ConTrader( trader4_instrument, pip=0.00001,decimal=5,gain=2,loss=1,space=0,pourcentage=global_percentage,weight=Weight4)    
+    trader4 = ConTrader( trader4_instrument, pip=0.00001,decimal=5,gain=1,loss=2,space=0,pourcentage=global_percentage,weight=Weight4)    
 
     trader5 = ConTrader( trader5_instrument, pip=0.001,decimal=3,gain=2,loss=1,space=0,pourcentage=global_percentage,weight=Weight5)    
-    trader6 = ConTrader( trader6_instrument, pip=0.001,decimal=3,gain=2,loss=1,space=0,pourcentage=global_percentage,weight=Weight6) 
+    trader6 = ConTrader( trader6_instrument, pip=0.001,decimal=3,gain=1,loss=2,space=0,pourcentage=global_percentage,weight=Weight6) 
 
     trader7 = ConTrader( trader7_instrument, pip=0.00001,decimal=5,gain=2,loss=1,space=0,pourcentage=global_percentage,weight=Weight7)    
-    trader8 = ConTrader( trader8_instrument, pip=0.00001,decimal=5,gain=2,loss=1,space=0,pourcentage=global_percentage,weight=Weight8)    
+    trader8 = ConTrader( trader8_instrument, pip=0.00001,decimal=5,gain=1,loss=2,space=0,pourcentage=global_percentage,weight=Weight8)    
 
     trader1.setUnits()    
     trader2.setUnits() 
