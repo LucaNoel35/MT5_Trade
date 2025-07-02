@@ -521,7 +521,7 @@ class ConTrader:
                         self.count=0
                         self.close_position(positions)
 
-                    if  self.inverse==0 and (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price) and self.config_b==1*self.strat_close and (self.instrument_b_obj_reached_sell )  and (self.position_b==-1 and self.safe==-1):  
+                    elif  self.inverse==0 and (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price) and self.config_b==1*self.strat_close and (self.instrument_b_obj_reached_sell )  and (self.position_b==-1 and self.safe==-1):  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)
