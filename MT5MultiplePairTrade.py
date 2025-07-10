@@ -98,6 +98,7 @@ class ConTrader:
         self.strat_b=strat
         self.strat_close_b=strat_close
         self.position = 0
+        self.previous_position = 0
         self.position_b = 0
         self.hedge = hedge
         self.hedge_b = hedge
@@ -431,14 +432,14 @@ class ConTrader:
 
 
         df['EMA_5'] = df["c"].ewm(span = 5, min_periods= 5).mean()
-        df['EMA_15'] = df["c"].ewm(span = 15, min_periods= 15).mean()
-        df['EMA_spread']=abs(df['EMA_5']-df['EMA_15'])
+        df['EMA_10'] = df["c"].ewm(span = 10, min_periods= 10).mean()
+        df['EMA_spread']=abs(df['EMA_5']-df['EMA_10'])
         df['EMA_spread_avg']=df["EMA_spread"].ewm(span = 5, min_periods= 5).mean()
         df['EMA_spread_bin']=np.where((df['EMA_spread']>df['EMA_spread_avg'] ),1,0) 
 
         #df['EMA_21'] = df["c"].ewm(span = 21, min_periods= 21).mean()
-        df['config'] = np.where((df['EMA_5']>df['EMA_15'] ),1,0) 
-        df['config'] = np.where((df['EMA_5']<df['EMA_15'] ),-1,df['config'] )                  
+        df['config'] = np.where((df['EMA_5']>df['EMA_10'] ),1,0) 
+        df['config'] = np.where((df['EMA_5']<df['EMA_10'] ),-1,df['config'] )                  
         df['ATR'] = ta.volatility.AverageTrueRange(df['h'],df['l'],df["c"],window=14,fillna=False).average_true_range()   
         self.avg=df["c"].mean()
         self.std=df["c"].std()
@@ -501,6 +502,7 @@ class ConTrader:
                 self.price=self.close
                 self.initialize=self.initialize_origin
                 self.beginning=self.beginning_origin
+                self.previous_position=0
             
             if (positions[0].type==0) :
                 self.PL=positions[0].profit
@@ -519,16 +521,21 @@ class ConTrader:
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)
+                        if self.space==0:
+                            self.previous_position=1
 
                     elif  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price)  and (self.position_b!=-1 or self.safe!=-1):  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)  
+                        if self.space==0:
+                            self.previous_position=1
                     
                     elif  self.objectif_reached_buy(self.price) and self.correlation==0 and self.position_b==0 and self.instrument_b==self.replacement_b:  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)  
+                        self.previous_position=0
 
             else :
                 #originally sell position
@@ -545,18 +552,23 @@ class ConTrader:
                     if  (self.config==-1*self.strat_close)  and self.objectif_reached_sell(self.price) and self.config_b==-1*self.strat_close and  ((self.instrument_b_obj_reached_buy and self.close*self.inverse<=self.price*self.inverse) or self.close*self.inverse>self.price*self.inverse) and (self.position_b==1 and self.safe==-1):  
                         self.price=self.close
                         self.count=0
-                        self.close_position(positions)                                                         
+                        self.close_position(positions)   
+                        if self.space==0:
+                            self.previous_position=-1                                                
                     #basically change hold position
                     
                     elif  (self.config==-1*self.strat_close)  and self.objectif_reached_sell(self.price)  and (self.position_b!=1 or self.safe!=-1):  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions) 
+                        if self.space==0:
+                            self.previous_position=-1
 
                     elif  self.objectif_reached_sell(self.price) and self.correlation==0 and self.position_b==0 and self.instrument_b==self.replacement_b:  
                         self.price=self.close
                         self.count=0
-                        self.close_position(positions)                    
+                        self.close_position(positions)  
+                        self.previous_position=0                  
 
         elif len(positions) == 0:  
             self.count+=1
@@ -575,7 +587,7 @@ class ConTrader:
 
             if  self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip and timing and self.correlation==1 and self.quota==False and ((self.count>5 and self.beginning!=1) or self.beginning==1): 
                 
-                if  ((self.config==-1*self.strat and (self.avg_space==1 or apply_spread_avg==0) and (self.beginning!=1)) or (self.beginning==1 and self.position_b==1)) and (abs(self.close-self.price)>self.space*self.val or self.initialize==1) :
+                if  ((  ((self.config==-1*self.strat and self.previous_position==0) or self.previous_position==1) and (self.avg_space==1 or apply_spread_avg==0) and (self.beginning!=1)) or (self.beginning==1 and self.position_b==1)) and (abs(self.close-self.price)>self.space*self.val or self.initialize==1) :
                     self.sell_order(self.units)
                     self.price=self.close 
                     self.val=val       
@@ -583,7 +595,7 @@ class ConTrader:
                     self.initialize=-1  
                     self.count=0     
 
-                elif ((self.config==1*self.strat and (self.avg_space==1 or apply_spread_avg==0) and (self.beginning!=1)) or (self.beginning==1 and self.position_b==-1)) and (abs(self.close-self.price)>self.space*self.val or self.initialize==1):
+                elif (( ((self.config==1*self.strat and self.previous_position==0) or self.previous_position==-1) and (self.avg_space==1 or apply_spread_avg==0) and (self.beginning!=1)) or (self.beginning==1 and self.position_b==-1)) and (abs(self.close-self.price)>self.space*self.val or self.initialize==1):
                     self.buy_order(self.units)
                     self.price=self.close
                     self.val=val
@@ -764,7 +776,8 @@ class ConTrader:
                 self.replaced=1
                 #self.correlation=0 
                 self.raw_data_b=None
-
+                self.previous_position=0
+                
             elif self.replacement in ['NZDJPY.pro','GBPJPY.pro','CADJPY.pro']:
                 self.instrument=self.replacement
                 self.decimal=3
@@ -772,6 +785,7 @@ class ConTrader:
                 self.replaced=1 
                 #self.correlation=0 
                 self.raw_data_b=None
+                self.previous_position=0
 
             elif self.replacement in ['CHFJPY.pro']:
                 self.instrument=self.replacement
@@ -780,6 +794,7 @@ class ConTrader:
                 self.replaced=1 
                 #self.correlation=0
                 self.raw_data_b=None
+                self.previous_position=0
 
             elif self.replacement in ['EURCAD.pro']:
                 self.instrument=self.replacement
@@ -788,6 +803,7 @@ class ConTrader:
                 self.replaced=1 
                 #self.correlation=0
                 self.raw_data_b=None
+                self.previous_position=0
 
             elif self.replacement in ['EURGBP.pro','EURCHF.pro']:
                 self.instrument=self.replacement
@@ -796,6 +812,8 @@ class ConTrader:
                 self.replaced=1 
                 #self.correlation=0
                 self.raw_data_b=None
+                self.previous_position=0
+
             else:
                 self.instrument=self.replacement
                 self.decimal=5
@@ -803,6 +821,7 @@ class ConTrader:
                 self.replaced=1
                 #self.correlation=0 
                 self.raw_data_b=None
+                self.previous_position=0
 
             if (self.replacement_b!=self.instrument_b):               
                 self.instrument_b=self.replacement_b
