@@ -17,8 +17,8 @@ import time
 
 from datetime import datetime,timezone
 
-nombre =  62517315               
-pwd = ')QqTFh(7'
+nombre =  62550676               
+pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 
@@ -43,12 +43,13 @@ value_spread_multiplier=10
 minimal_pip_multiplier=20
 minimal_avg_pip_multiplier=25
 
-correlation_number=120
+correlation_number=60
 correlation_multiplier=4
 correlation_divider=2
 
 high_correlation_value=0.75
 low_correlation_value=high_correlation_value/3
+strictly_automated=1
 
 #advised to always use pairs with one currency always present in each of them
 #not enough correct currencies to be used correctly
@@ -521,14 +522,14 @@ class ConTrader:
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)
-                        if self.space==0:
+                        if self.space==0 and strictly_automated==1:
                             self.previous_position=1
 
                     elif  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price)  and (self.position_b!=-1 or self.safe!=-1):  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)  
-                        if self.space==0:
+                        if self.space==0 and strictly_automated==1:
                             self.previous_position=1
                     
                     elif  self.objectif_reached_buy(self.price) and self.correlation==0 and self.position_b==0 and self.instrument_b==self.replacement_b:  
@@ -553,7 +554,7 @@ class ConTrader:
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)   
-                        if self.space==0:
+                        if self.space==0 and strictly_automated==1:
                             self.previous_position=-1                                                
                     #basically change hold position
                     
@@ -561,7 +562,7 @@ class ConTrader:
                         self.price=self.close
                         self.count=0
                         self.close_position(positions) 
-                        if self.space==0:
+                        if self.space==0 and strictly_automated==1:
                             self.previous_position=-1
 
                     elif  self.objectif_reached_sell(self.price) and self.correlation==0 and self.position_b==0 and self.instrument_b==self.replacement_b:  
@@ -777,7 +778,7 @@ class ConTrader:
                 #self.correlation=0 
                 self.raw_data_b=None
                 self.previous_position=0
-                
+
             elif self.replacement in ['NZDJPY.pro','GBPJPY.pro','CADJPY.pro']:
                 self.instrument=self.replacement
                 self.decimal=3
@@ -870,36 +871,48 @@ class ConTrader:
                     self.decimal=3
                     self.pip=0.001
                     self.replaced=1
+                    self.previous_position=0
+
                 elif temp in ['NZDJPY.pro','GBPJPY.pro','CADJPY.pro']:
                     self.instrument=temp
                     self.replacement=temp
                     self.decimal=3
                     self.pip=0.002
                     self.replaced=1   
+                    self.previous_position=0
+
                 elif temp in ['CHFJPY.pro']:
                     self.instrument=temp
                     self.replacement=temp
                     self.decimal=3
                     self.pip=0.0025
                     self.replaced=1  
+                    self.previous_position=0
+
                 elif temp in ['EURGBP.pro','EURCHF.pro']:
                     self.instrument=temp
                     self.replacement=temp
                     self.decimal=5
                     self.pip=0.000015
-                    self.replaced=1    
+                    self.replaced=1   
+                    self.previous_position=0
+
                 elif temp in ['EURCAD.pro']:
                     self.instrument=temp
                     self.replacement=temp
                     self.decimal=5
                     self.pip=0.000025
-                    self.replaced=1              
+                    self.replaced=1   
+                    self.previous_position=0
+
                 else:
                     self.instrument=temp
                     self.replacement=temp
                     self.decimal=5
                     self.pip=0.00001
                     self.replaced=1
+                    self.previous_position=0
+
 
     def random_change_instrument(self,Watchlist,ls):
         if  self.position==0:
@@ -911,36 +924,47 @@ class ConTrader:
                     self.decimal=3
                     self.pip=0.001
                     self.replaced=1
+                    self.previous_position=0
+
                 elif temp in ['NZDJPY.pro','GBPJPY.pro','CADJPY.pro']:
                     self.instrument=temp
                     self.replacement=temp
                     self.decimal=3
                     self.pip=0.002
                     self.replaced=1   
+                    self.previous_position=0
+
                 elif temp in ['CHFJPY.pro']:
                     self.instrument=temp
                     self.replacement=temp
                     self.decimal=3
                     self.pip=0.0025
                     self.replaced=1   
+                    self.previous_position=0
+
                 elif temp in ['EURCAD.pro']:
                     self.instrument=temp
                     self.replacement=temp
                     self.decimal=5
                     self.pip=0.000025
                     self.replaced=1    
+                    self.previous_position=0
+
                 elif temp in ['EURGBP.pro','EURCHF.pro']:
                     self.instrument=temp
                     self.replacement=temp
                     self.decimal=5
                     self.pip=0.000015
-                    self.replaced=1             
+                    self.replaced=1    
+                    self.previous_position=0
+         
                 else:
                     self.instrument=temp
                     self.replacement=temp
                     self.decimal=5
                     self.pip=0.00001
                     self.replaced=1
+                    self.previous_position=0
         
 
 """
@@ -992,15 +1016,15 @@ if __name__ == "__main__":
     if not mt5.initialize(login = nombre, password = pwd, server = server_name, path = path_name):
         print("initialize() failed")
 
-    trader1 = ConTrader( trader1_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader2_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=-1,inverse=0) 
-    trader2 = ConTrader( trader2_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader1_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=1,inverse=-1)
-    trader3 = ConTrader( trader3_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader4_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=-1,inverse=0)
-    trader4 = ConTrader( trader4_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader3_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=1,inverse=-1)
+    trader1 = ConTrader( trader1_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=2,space=0,instrument_b=trader2_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=1,inverse=-1) 
+    trader2 = ConTrader( trader2_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1,loss=2,space=0,instrument_b=trader1_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=-1,inverse=-1)
+    trader3 = ConTrader( trader3_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=2,space=0,instrument_b=trader4_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=1,inverse=-1)
+    trader4 = ConTrader( trader4_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1,loss=2,space=0,instrument_b=trader3_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=-1,inverse=1)
     
-    trader5 = ConTrader( trader5_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader6_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=-1,inverse=0) 
-    trader6 = ConTrader( trader6_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader5_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=1,inverse=1)
-    trader7 = ConTrader( trader7_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader8_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=-1,inverse=0)
-    trader8 = ConTrader( trader8_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader7_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=1,inverse=1)
+    trader5 = ConTrader( trader5_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=2,space=0,instrument_b=trader6_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=1,inverse=1) 
+    trader6 = ConTrader( trader6_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1,loss=2,space=0,instrument_b=trader5_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=-1,inverse=-1)
+    trader7 = ConTrader( trader7_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=2,space=0,instrument_b=trader8_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=1,inverse=1)
+    trader8 = ConTrader( trader8_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1,loss=2,space=0,instrument_b=trader7_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=-1,inverse=1)
 
     #gain*mid_level and loss*mid_level -> ref
     trader1.setUnits()    
