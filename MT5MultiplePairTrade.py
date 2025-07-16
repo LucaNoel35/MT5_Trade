@@ -51,14 +51,12 @@ high_correlation_value=0.75
 low_correlation_value=high_correlation_value/3
 strictly_automated=1
 
-#advised to always use pairs with one currency always present in each of them
-#not enough correct currencies to be used correctly
-#GBPJPY and CHFJPY too expensive compared to EUR
+#Japanese market
 Watch_List = ['AUDJPY.pro', 'EURJPY.pro','GBPJPY.pro', 'CHFJPY.pro',
               'USDJPY.pro','CADJPY.pro','NZDJPY.pro']
-
+#US market
 Watch_List_2 = ['AUDUSD.pro', 'EURUSD.pro','GBPUSD.pro', 'USDCHF.pro',
-              'USDCAD.pro','NZDUSD.pro','EURGBP.pro','EURCAD.pro','EURCHF.pro']
+              'USDCAD.pro','NZDUSD.pro']
 
 trader1_instrument='EURJPY.pro'
 trader2_instrument='USDJPY.pro'
@@ -525,7 +523,7 @@ class ConTrader:
                         if self.space==0 and strictly_automated==1:
                             self.previous_position=1
 
-                    elif  (self.config==1*self.strat_close)  and self.instrument_b_obj_reached_buy  and (self.position_b!=-1 or self.safe!=-1):  
+                    elif  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price)  and (self.position_b!=-1 or self.safe!=-1):  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)  
@@ -558,7 +556,7 @@ class ConTrader:
                             self.previous_position=-1                                                
                     #basically change hold position
                     
-                    elif  (self.config==-1*self.strat_close)  and self.instrument_b_obj_reached_sell  and (self.position_b!=1 or self.safe!=-1):  
+                    elif  (self.config==-1*self.strat_close)  and self.objectif_reached_sell(self.price)  and (self.position_b!=1 or self.safe!=-1):  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions) 
@@ -1016,15 +1014,15 @@ if __name__ == "__main__":
     if not mt5.initialize(login = nombre, password = pwd, server = server_name, path = path_name):
         print("initialize() failed")
 
-    trader1 = ConTrader( trader1_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=2,loss=1,space=0,instrument_b=trader2_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=-1,inverse=-1) 
-    trader2 = ConTrader( trader2_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader1_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=-1,inverse=-1)
-    trader3 = ConTrader( trader3_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=2,loss=1,space=0,instrument_b=trader4_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=-1,inverse=1)
-    trader4 = ConTrader( trader4_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader3_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=-1,inverse=-1)
+    trader1 = ConTrader( trader1_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader2_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=-1,inverse=0) 
+    trader2 = ConTrader( trader2_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader1_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=1,inverse=1)
+    trader3 = ConTrader( trader3_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader4_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=-1,inverse=0)
+    trader4 = ConTrader( trader4_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader3_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=1,inverse=1)
     
-    trader5 = ConTrader( trader5_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=2,loss=1,space=0,instrument_b=trader6_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=-1,inverse=-1) 
-    trader6 = ConTrader( trader6_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader5_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=-1,inverse=1)
-    trader7 = ConTrader( trader7_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=2,loss=1,space=0,instrument_b=trader8_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=-1,inverse=-1)
-    trader8 = ConTrader( trader8_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=2,loss=1,space=0,instrument_b=trader7_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=-1,inverse=1)
+    trader5 = ConTrader( trader5_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader6_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=-1,inverse=0) 
+    trader6 = ConTrader( trader6_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader5_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=1,inverse=1)
+    trader7 = ConTrader( trader7_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=1,space=0,instrument_b=trader8_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=-1,inverse=0)
+    trader8 = ConTrader( trader8_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader7_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=1,inverse=1)
 
     #gain*mid_level and loss*mid_level -> ref
     trader1.setUnits()    
