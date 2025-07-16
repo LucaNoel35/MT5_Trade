@@ -421,8 +421,8 @@ class ConTrader:
         previous_time=self.last_bar
         val=max(value_spread_multiplier*self.spread,self.atr) 
 
-        self.execute_trades(1,-1,"price_1","price_2","position_1","position_2",self.loss,self.gain,-1,1,-1,1)
-        self.execute_trades(-1,1,"price_2","price_1","position_2","position_1",self.mid_value,self.loss,-1,1,1,-1)        
+        self.execute_trades(1,-1,"price_1","price_2","position_1","position_2",self.gain,self.loss,-1,1,-1,1)
+        self.execute_trades(-1,1,"price_2","price_1","position_2","position_1",self.gain,self.loss,-1,1,-1,1)        
         #self.execute_trades(-1,1,"price_3","position_3",self.mid_value,self.loss,-1,1)
         #self.execute_trades(-1,1,"price_4","position_4",self.gain,self.gain,-1,1)
         self.val=val
@@ -433,8 +433,8 @@ class ConTrader:
                 self.prepare_data()
                 val=max(value_spread_multiplier*self.spread,self.atr) 
                 if self.positions!=None:
-                    self.execute_trades(1,-1,"price_1","price_2","position_1","position_2",self.loss,self.gain,-1,1,-1,1)
-                    self.execute_trades(-1,1,"price_2","price_1","position_2","position_1",self.mid_value,self.loss,-1,1,1,-1)        
+                    self.execute_trades(1,-1,"price_1","price_2","position_1","position_2",self.gain,self.loss,-1,1,-1,1)
+                    self.execute_trades(-1,1,"price_2","price_1","position_2","position_1",self.gain,self.loss,-1,1,-1,1)        
                     #self.execute_trades(-1,1,"price_3","position_3",self.mid_value,self.loss,-1,1)
                     #self.execute_trades(-1,1,"price_4","position_4",self.gain,self.gain,-1,1)
                 self.val=val
@@ -686,7 +686,7 @@ class ConTrader:
                             self.positions=None
                         #basically change hold position
 
-                        elif   (strat!=strat_close or hold_invertible==False) and (df.at[ls[-1],"config"]==1*strat_close)  and (position_taken_2!=-1 or safe==1) and self.objectif_reached_buy(price,gain,loss,mode_close)  :  
+                        elif   (strat!=strat_close or hold_invertible==False) and (df.at[ls[-1],"config"]==1*strat_close)  and (position_taken_2!=-1 or safe==1) and self.objectif_reached_buy(price_2,gain,loss,mode_close)  :  
                             #price=self.close
                             self.close_buy_position(position)   
                             position_taken=0
@@ -714,7 +714,7 @@ class ConTrader:
                             #setattr(self,price_name,price)
                             #setattr(self,position_name,position_taken)
                             self.positions=None
-                        elif  (strat!=strat_close or hold_invertible==False) and (df.at[ls[-1],"config"]==-1*strat_close)  and (position_taken_2!=1 or safe==1) and self.objectif_reached_sell(price,gain,loss,mode_close) :  
+                        elif  (strat!=strat_close or hold_invertible==False) and (df.at[ls[-1],"config"]==-1*strat_close)  and (position_taken_2!=1 or safe==1) and self.objectif_reached_sell(price_2,gain,loss,mode_close) :  
                             #price=self.close
                             self.close_sell_position(position)   
                             position_taken=0
@@ -837,7 +837,6 @@ class ConTrader:
                 else:
                     print(f"Failed to close position {position.ticket}. Error code: {result.retcode}, Error description: {result.comment}")
 
-               
 
     def close_sell_position(self,position):
 
