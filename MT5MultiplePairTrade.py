@@ -17,8 +17,8 @@ import time
 
 from datetime import datetime,timezone
 
-nombre =  62550676               
-pwd = 'Sephiroth35*'
+nombre =  62436458               
+pwd = 'Testidiot35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 
@@ -1015,14 +1015,14 @@ if __name__ == "__main__":
         print("initialize() failed")
 
     trader1 = ConTrader( trader1_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=2,space=0,instrument_b=trader2_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=-1,inverse=1) 
-    trader2 = ConTrader( trader2_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader1_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=1,inverse=1)
+    trader2 = ConTrader( trader2_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader1_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=1,inverse=-1)
     trader3 = ConTrader( trader3_instrument,  pip=0.001,decimal=3,strat=1,strat_close=-1,gain=1,loss=2,space=0,instrument_b=trader4_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=-1,inverse=1)
-    trader4 = ConTrader( trader4_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader3_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=1,inverse=1)
+    trader4 = ConTrader( trader4_instrument,  pip=0.001,decimal=3,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader3_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=-1,inverse=1)
     
     trader5 = ConTrader( trader5_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=2,space=0,instrument_b=trader6_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=-1,safe=-1,inverse=1) 
-    trader6 = ConTrader( trader6_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader5_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=1,inverse=1)
+    trader6 = ConTrader( trader6_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader5_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=1,safe=1,inverse=-1)
     trader7 = ConTrader( trader7_instrument,  pip=0.00001,decimal=5,strat=1,strat_close=-1,gain=1,loss=2,space=0,instrument_b=trader8_instrument,pourcentage=0.02,hedge=1,initialize=1,beginning=1,safe=-1,inverse=1)
-    trader8 = ConTrader( trader8_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader7_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=1,inverse=1)
+    trader8 = ConTrader( trader8_instrument,  pip=0.00001,decimal=5,strat=-1,strat_close=1,gain=1.5,loss=1,space=0,instrument_b=trader7_instrument,pourcentage=0.02,hedge=-1,initialize=1,beginning=-1,safe=1,inverse=-1)
 
     #gain*mid_level and loss*mid_level -> ref
     trader1.setUnits()    
@@ -1116,10 +1116,11 @@ if __name__ == "__main__":
     
     while True:
         now = datetime.now(timezone.utc)
-        
+
+        """
         if now.time() > pd.to_datetime("21:00").time() and now.time() < pd.to_datetime("22:00").time():
             break 
-        
+        """
         
         if trader1.quota==True and trader2.quota==True and trader3.quota==True and trader4.quota==True:
             if trader1.position==0 and trader2.position==0 and trader3.position==0 and trader4.position==0:
