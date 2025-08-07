@@ -421,8 +421,8 @@ class ConTrader:
         previous_time=self.last_bar
         val=max(value_spread_multiplier*self.spread,self.atr) 
 
-        self.execute_trades(1,-1,"price_1","price_2","position_1","position_2",self.loss,self.gain,self.mid_value,self.loss,-1,1,-1,-1)
-        self.execute_trades(-1,1,"price_2","price_1","position_2","position_1",self.mid_value,self.loss,self.loss,self.gain,-1,1,-1,-1)        
+        self.execute_trades(1,-1,"price_1","price_2","position_1","position_2",self.lomid_valuess,self.gain,self.mid_value,self.loss,-1,1,-1,-1)
+        self.execute_trades(-1,1,"price_2","price_1","position_2","position_1",self.mid_value,self.loss,self.mid_value,self.gain,-1,1,-1,-1)        
         #self.execute_trades(-1,1,"price_3","position_3",self.mid_value,self.loss,-1,1)
         #self.execute_trades(-1,1,"price_4","position_4",self.gain,self.gain,-1,1)
         self.val=val
@@ -433,8 +433,8 @@ class ConTrader:
                 self.prepare_data()
                 val=max(value_spread_multiplier*self.spread,self.atr) 
                 if self.positions!=None:
-                    self.execute_trades(1,-1,"price_1","price_2","position_1","position_2",self.loss,self.gain,self.mid_value,self.loss,-1,1,-1,-1)
-                    self.execute_trades(-1,1,"price_2","price_1","position_2","position_1",self.mid_value,self.loss,self.loss,self.gain,-1,1,-1,-1)         
+                    self.execute_trades(1,-1,"price_1","price_2","position_1","position_2",self.mid_value,self.gain,self.mid_value,self.loss,-1,1,-1,-1)
+                    self.execute_trades(-1,1,"price_2","price_1","position_2","position_1",self.mid_value,self.loss,self.mid_value,self.gain,-1,1,-1,-1)         
                     #self.execute_trades(-1,1,"price_3","position_3",self.mid_value,self.loss,-1,1)
                     #self.execute_trades(-1,1,"price_4","position_4",self.gain,self.gain,-1,1)
                 self.val=val
