@@ -17,7 +17,7 @@ import time
 
 from datetime import datetime,timezone
 
-nombre =  62151134               
+nombre =  62655881               
 pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
@@ -1117,10 +1117,10 @@ if __name__ == "__main__":
     while True:
         now = datetime.now(timezone.utc)
 
-        """
+        
         if now.time() > pd.to_datetime("21:00").time() and now.time() < pd.to_datetime("22:00").time():
             break 
-        """
+        
         
         if trader1.quota==True and trader2.quota==True and trader3.quota==True and trader4.quota==True:
             if trader1.position==0 and trader2.position==0 and trader3.position==0 and trader4.position==0:
