@@ -529,7 +529,8 @@ class ConTrader:
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)  
-                        self.previous_position=0
+                        if self.space==0:
+                            self.previous_position=1
 
             else :
                 #originally sell position
@@ -561,7 +562,8 @@ class ConTrader:
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)  
-                        #self.previous_position=0                  
+                        if self.space==0 :
+                            self.previous_position=-1                 
 
         elif len(positions) == 0:  
             self.count+=1
@@ -1183,4 +1185,3 @@ if __name__ == "__main__":
             print(mt5.last_error())
             thread_running =0
     sys.exit()
-
