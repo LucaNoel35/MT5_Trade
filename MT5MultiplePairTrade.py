@@ -49,7 +49,6 @@ correlation_divider=2
 
 high_correlation_value=0.75
 low_correlation_value=high_correlation_value/3
-strictly_automated=0
 
 #Japanese market
 Watch_List = ['AUDJPY.pro', 'EURJPY.pro','GBPJPY.pro', 'CHFJPY.pro',
@@ -98,6 +97,7 @@ class ConTrader:
         self.strat_close_b=strat_close
         self.position = 0
         self.previous_position = 0
+        self.latest_seen_position = 0
         self.position_b = 0
         self.hedge = hedge
         self.hedge_b = hedge
@@ -145,9 +145,6 @@ class ConTrader:
         self.leverage=global_leverage/number_of_instrument
         self.tolerance=0.001
     
-        self.s=0
-        self.max_level=None
-        self.min_level=None
         self.atr=0  
         self.atr_avg=0         
         self.stop_loss=None
@@ -242,8 +239,7 @@ class ConTrader:
         df = df.set_index("time")     
         self.raw_data = df.copy()
  
-        self.last_bar = self.raw_data.index[-1]
-        self.s =  np.mean(df['h'] - df['l'])                
+        self.last_bar = self.raw_data.index[-1]         
 
 
     def performTrade(self):
@@ -504,6 +500,7 @@ class ConTrader:
                 self.previous_position=0
             
             if (positions[0].type==0) :
+                self.latest_seen_position=1
                 self.PL=positions[0].profit
                 self.PL_tot=self.PL+self.PL_b
                 #originally buy position
@@ -511,23 +508,21 @@ class ConTrader:
                 if self.price==None :
                     self.price=positions[0].price_open 
 
-                    self.max_level=df["h"].max()
-                    self.min_level=df["l"].min() 
                     
                 if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.position_b==-1) or self.position_b!=-1:
 
-                    if   (self.config==1*self.strat_close) and self.config_b==-1*self.strat_close*self.strat_b and self.objectif_reached_buy(self.price)  and ((self.instrument_b_obj_reached_sell and self.close*self.inverse>=self.price*self.inverse) or self.close*self.inverse<self.price*self.inverse) and (self.position_b==-1 and self.safe==-1):  
+                    if   (self.config==1*self.strat_close) and self.config_b==-1*self.strat_close*self.strat_b and self.objectif_reached_buy(self.price)  and ((self.instrument_b_obj_reached_sell and self.close*self.inverse>=self.price*self.inverse ) or self.close*self.inverse<self.price*self.inverse) and (self.position_b==-1 and self.safe==-1):  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)
-                        if self.space==0 and strictly_automated==1:
+                        if self.space==0:
                             self.previous_position=1
 
                     elif  (self.config==1*self.strat_close)  and self.objectif_reached_buy(self.price)  and (self.position_b!=-1 or self.safe!=-1):  
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)  
-                        if self.space==0 and strictly_automated==1:
+                        if self.space==0:
                             self.previous_position=1
                     
                     elif  self.objectif_reached_buy(self.price) and self.correlation==0 and self.position_b==0 and self.instrument_b==self.replacement_b:  
@@ -538,13 +533,12 @@ class ConTrader:
 
             else :
                 #originally sell position
+                self.latest_seen_position=-1
                 self.PL=positions[0].profit
                 self.PL_tot=self.PL+self.PL_b
                 self.position=-1
                 if self.price==None :
                     self.price=positions[0].price_open 
-                    self.max_level=df["h"].max()
-                    self.min_level=df["l"].min()
 
                 if  ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip) and self.position_b==1) or self.position_b!=1:
  
@@ -552,7 +546,7 @@ class ConTrader:
                         self.price=self.close
                         self.count=0
                         self.close_position(positions)   
-                        if self.space==0 and strictly_automated==1:
+                        if self.space==0 :
                             self.previous_position=-1                                                
                     #basically change hold position
                     
@@ -560,7 +554,7 @@ class ConTrader:
                         self.price=self.close
                         self.count=0
                         self.close_position(positions) 
-                        if self.space==0 and strictly_automated==1:
+                        if self.space==0 :
                             self.previous_position=-1
 
                     elif  self.objectif_reached_sell(self.price) and self.correlation==0 and self.position_b==0 and self.instrument_b==self.replacement_b:  
@@ -577,8 +571,6 @@ class ConTrader:
 
             if self.price==None and self.close!=None:
                 self.price=self.close 
-                self.max_level=df["h"].max()
-                self.min_level=df["l"].min()
                 
             if self.count>5:
                 self.position=0
@@ -586,7 +578,7 @@ class ConTrader:
 
             if  self.spread <= minimal_pip_multiplier*self.pip and self.spread_average<minimal_avg_pip_multiplier*self.pip and timing and self.correlation==1 and self.quota==False and ((self.count>5 and self.beginning!=1) or self.beginning==1): 
                 
-                if  ((  ((self.config==-1*self.strat and self.previous_position==0) or self.previous_position==1) and (self.avg_space==1 or apply_spread_avg==0) and (self.beginning!=1)) or (self.beginning==1 and self.position_b==1)) and (abs(self.close-self.price)>self.space*self.val or self.initialize==1) :
+                if  ((  ((self.config==-1*self.strat and (self.previous_position!=self.latest_seen_position or self.previous_position==0)) or (self.previous_position==1 and self.previous_position==self.latest_seen_position)) and (self.avg_space==1 or apply_spread_avg==0) and (self.beginning!=1)) or (self.beginning==1 and self.position_b==1)) and (abs(self.close-self.price)>self.space*self.val or self.initialize==1) :
                     self.sell_order(self.units)
                     self.price=self.close 
                     self.val=val       
@@ -594,7 +586,7 @@ class ConTrader:
                     self.initialize=-1  
                     self.count=0     
 
-                elif (( ((self.config==1*self.strat and self.previous_position==0) or self.previous_position==-1) and (self.avg_space==1 or apply_spread_avg==0) and (self.beginning!=1)) or (self.beginning==1 and self.position_b==-1)) and (abs(self.close-self.price)>self.space*self.val or self.initialize==1):
+                elif (( ((self.config==1*self.strat and (self.previous_position!=self.latest_seen_position or self.previous_position==0)) or (self.previous_position==-1 and self.previous_position==self.latest_seen_position)) and (self.avg_space==1 or apply_spread_avg==0) and (self.beginning!=1)) or (self.beginning==1 and self.position_b==-1)) and (abs(self.close-self.price)>self.space*self.val or self.initialize==1):
                     self.buy_order(self.units)
                     self.price=self.close
                     self.val=val
