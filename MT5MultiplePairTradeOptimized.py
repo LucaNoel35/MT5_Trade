@@ -27,7 +27,7 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre = 62655881
+nombre = 62151134
 pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
@@ -97,7 +97,7 @@ class MarketManager:
         # throttling
         self.tick_interval_s = 1.0           # pull ticks at most once per second
         self.positions_interval_s = 1.0      # pull positions once per second
-        self.rates_interval_s = 2.0          # scan bars once every 2s (per symbol new-bar check)
+        self.rates_interval_s = 1.0          # scan bars once every 2s (per symbol new-bar check)
 
     # --------- pulls ---------
     def pull_ticks(self):
@@ -706,15 +706,15 @@ if __name__ == "__main__":
     mm.pull_ticks(); mm.pull_positions(); mm.pull_rates()
 
     # Instantiate traders
-    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, 1,  2,0, trader2_instrument,0.02,-1,1,-1,-1,-1)
-    trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1,1.5,1,0, trader1_instrument,0.02, 1,1, 1,-1,-1)
-    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, 1,  2,0, trader4_instrument,0.02,-1,1, 1,-1,-1)
-    trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1,1.5,1,0, trader3_instrument,0.02, 1,1,-1,-1,-1)
+    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, 1.5,  1.5,0, trader2_instrument,0.02,-1,1,-1,-1,-1)
+    trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1,2,1,0, trader1_instrument,0.02, 1,1, 1,-1,-1)
+    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, 1.5,  1.5,0, trader4_instrument,0.02,-1,1, 1,-1,-1)
+    trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1,2,1,0, trader3_instrument,0.02, 1,1,-1,-1,-1)
 
-    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, 1,  2,0, trader6_instrument,0.02, 1,1,-1,-1,-1)
-    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1,1.5,1,0, trader5_instrument,0.02,-1,1, 1,-1,-1)
-    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, 1,  2,0, trader8_instrument,0.02, 1,1, 1,-1,-1)
-    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1,1.5,1,0, trader7_instrument,0.02,-1,1,-1,-1,-1)
+    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, 1.5,  1.5,0, trader6_instrument,0.02, 1,1,-1,-1,-1)
+    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1,2,1,0, trader5_instrument,0.02,-1,1, 1,-1,-1)
+    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, 1.5,  1.5,0, trader8_instrument,0.02, 1,1, 1,-1,-1)
+    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1,2,1,0, trader7_instrument,0.02,-1,1,-1,-1,-1)
 
     traders = [trader1,trader2,trader3,trader4,trader5,trader6,trader7,trader8]
 
@@ -735,10 +735,11 @@ if __name__ == "__main__":
     # Main scheduler loop
     while True:
         now = datetime.now(timezone.utc)
-
+        """
         # stop conditions (same as original, but more compact)
         if pd.to_datetime("21:00").time() < now.time() < pd.to_datetime("22:00").time():
             break
+        """
 
         # keep MT5 session alive / re-init if needed
         if mt5.last_error()[0] != 1:
@@ -789,8 +790,8 @@ if __name__ == "__main__":
             for t in traders:
                 t.execute_trades()
 
-            # pace with timeframe; 1s is enough for M1
-            time.sleep(1.0)
+            # pace with timeframe; 0.1s is enough for M1
+            time.sleep(0.1)
         except:
             print("Trading not active")
             print(mt5.last_error())
