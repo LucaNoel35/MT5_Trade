@@ -290,7 +290,7 @@ class ConTrader:
         balance = account_info.balance if account_info else 0
         self.original_balance = balance
         hedge_fac = hedge_factor if self.hedge == -1 else 1
-        lots = max(round(((balance / 100000) * self.leverage)*100)/100, 0.01)
+        lots = max(round((math.floor(((balance / 100000)*self.leverage)*100))/100 ,2),0.01)
         self.units = round(hedge_fac * lots, 2)
         self.initial_units = self.units
         print(self.instrument, self.units, "lots")
