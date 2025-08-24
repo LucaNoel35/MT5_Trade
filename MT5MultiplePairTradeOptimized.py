@@ -411,7 +411,10 @@ class ConTrader:
         self.getEMA(self.raw_data)
         self.val_instant = max(value_spread_multiplier * self.spread, self.atr)
         val = self.val_instant
-
+      
+        if self.replaced == 1:
+            self.price = self.close
+            self.replaced =0
         # counterpart info from paired trader (set by place_info)
         # correlation check throttled
         self.correlate()
