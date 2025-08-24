@@ -412,6 +412,10 @@ class ConTrader:
         self.val_instant = max(value_spread_multiplier * self.spread, self.atr)
         val = self.val_instant
 
+        if self.replaced == 1:
+            self.price = self.close
+            self.replaced =0
+
         # counterpart info from paired trader (set by place_info)
         # correlation check throttled
         self.correlate()
@@ -473,7 +477,7 @@ class ConTrader:
             if p0.type == 0:  # BUY open
                 cond_ok_spread = ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip) and self.position_b == -1) or self.position_b != -1
                 if cond_ok_spread:
-                    if (self.config == 1*self.strat_close and self.objectif_reached_buy(self.price) and self.config_b == -1*self.strat_close*self.strat_b and ((self.instrument_b_obj_reached_sell and self.close*self.inverse >= self.price*self.inverse) or self.close*self.inverse < self.price*self.inverse) and (self.position_b == -1 and self.safe == -1)):
+                    if (self.config == 1*self.strat_close and self.objectif_reached_buy(self.price)  and ((self.instrument_b_obj_reached_sell and self.close*self.inverse >= self.price*self.inverse and self.config_b == -1*self.strat_close*self.strat_b) or self.close*self.inverse < self.price*self.inverse) and (self.position_b == -1 and self.safe == -1)):
                         self.price = self.close; self.count = 0; self.close_position(positions)
                         if self.space == 0: self.previous_position = 1
                     elif (self.config == 1*self.strat_close and self.objectif_reached_buy(self.price) and (self.position_b != -1 or self.safe != -1)):
@@ -485,7 +489,7 @@ class ConTrader:
             else:  # SELL open
                 cond_ok_spread = ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip) and self.position_b == 1) or self.position_b != 1
                 if cond_ok_spread:
-                    if (self.config == -1*self.strat_close and self.objectif_reached_sell(self.price) and self.config_b == 1*self.strat_close*self.strat_b and ((self.instrument_b_obj_reached_buy and self.close*self.inverse <= self.price*self.inverse) or self.close*self.inverse > self.price*self.inverse) and (self.position_b == 1 and self.safe == -1)):
+                    if (self.config == -1*self.strat_close and self.objectif_reached_sell(self.price)  and ((self.instrument_b_obj_reached_buy and self.close*self.inverse <= self.price*self.inverse and self.config_b == 1*self.strat_close*self.strat_b) or self.close*self.inverse > self.price*self.inverse) and (self.position_b == 1 and self.safe == -1)):
                         self.price = self.close; self.count = 0; self.close_position(positions)
                         if self.space == 0: self.previous_position = -1
                     elif (self.config == -1*self.strat_close and self.objectif_reached_sell(self.price) and (self.position_b != 1 or self.safe != -1)):
