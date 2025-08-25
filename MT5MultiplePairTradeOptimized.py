@@ -312,7 +312,7 @@ class ConTrader:
         if df is None or df.empty:
             return
         self.raw_data = df
-        self.last_bar = self.raw_data.index[-1]
+        #self.last_bar = self.raw_data.index[-1]
 
     # ---------- indicators ----------
     @staticmethod
