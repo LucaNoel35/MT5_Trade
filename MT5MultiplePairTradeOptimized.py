@@ -507,7 +507,7 @@ class ConTrader:
             if self.count > 5:
                 self.position = 0; self.PL = 0
 
-            can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and self.correlation == 1 and not self.quota and ((self.count > 5 and self.beginning != 1) or self.beginning == 1))
+            can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and self.correlation == 1 and not self.quota and ((self.count > 5 and self.beginning != 1) or self.beginning == 1) and self.instrument!=self.instrument_b)
             if can_trade:
                 # sell setup
                 cond_sell = (((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position)) and (self.avg_space == 1 or apply_spread_avg == 0) and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1)
