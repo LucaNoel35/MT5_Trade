@@ -27,7 +27,7 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre = 62655881
+nombre = 62151134
 pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
@@ -283,8 +283,10 @@ class ConTrader:
         else:
             self.decimal = 5; self.pip = 0.00001
 
+        positions = mt5.positions_get()
+
         # close any orphan positions once at startup (use cached positions later)
-        self.close_position(self.mm.get_positions(self.instrument))
+        self.close_position(positions)
 
         account_info = mt5.account_info()
         balance = account_info.balance if account_info else 0
@@ -498,7 +500,7 @@ class ConTrader:
                     elif (self.objectif_reached_sell(self.price) and self.correlation == 0 and self.position_b == 0 and self.instrument_b == self.replacement_b):
                         self.price = self.close; self.count = 0; self.close_position(positions)
                         if self.space == 0: self.previous_position = -1
-        else:
+        elif len(positions) ==0 :
             # no open position for this symbol
             self.count += 1
             timing = not (pd.to_datetime("20:45").time() < now.time() < pd.to_datetime("22:15").time())
@@ -507,7 +509,7 @@ class ConTrader:
             if self.count > 5:
                 self.position = 0; self.PL = 0
 
-            can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and self.correlation == 1 and not self.quota and ((self.count > 5 and self.beginning != 1) or self.beginning == 1) and self.instrument!=self.instrument_b)
+            can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and self.correlation == 1 and not self.quota and ((self.count > 5 and self.beginning != 1) or self.beginning == 1) and self.instrument!=self.instrument_b and self.position==0)
             if can_trade:
                 # sell setup
                 cond_sell = (((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position)) and (self.avg_space == 1 or apply_spread_avg == 0) and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1)
@@ -589,26 +591,25 @@ class ConTrader:
 
     # ---------- pairing & maintenance ----------
     def replace_instrument(self):
-        if self.position != 0 or self.correlation != 0 or self.replacement == self.instrument:
-            return
         # adjust decimals/pips when switching
-        temp = self.replacement
-        if temp in ['USDJPY.pro','EURJPY.pro','AUDJPY.pro']:
-            self.instrument = temp; self.decimal = 3; self.pip = 0.001
-        elif temp in ['NZDJPY.pro','GBPJPY.pro','CADJPY.pro']:
-            self.instrument = temp; self.decimal = 3; self.pip = 0.002
-        elif temp in ['CHFJPY.pro']:
-            self.instrument = temp; self.decimal = 3; self.pip = 0.0025
-        elif temp in ['EURCAD.pro']:
-            self.instrument = temp; self.decimal = 5; self.pip = 0.000025
-        elif temp in ['EURGBP.pro','EURCHF.pro']:
-            self.instrument = temp; self.decimal = 5; self.pip = 0.000015
-        else:
-            self.instrument = temp; self.decimal = 5; self.pip = 0.00001
-        self.replaced = 1
-        self.raw_data_b = None
-        if self.replacement_b != self.instrument_b:
-            self.instrument_b = self.replacement_b
+        if self.position==0 and (self.correlation==0)  and (self.replacement!=self.instrument) :
+            temp = self.replacement
+            if temp in ['USDJPY.pro','EURJPY.pro','AUDJPY.pro']:
+                self.instrument = temp; self.decimal = 3; self.pip = 0.001
+            elif temp in ['NZDJPY.pro','GBPJPY.pro','CADJPY.pro']:
+                self.instrument = temp; self.decimal = 3; self.pip = 0.002
+            elif temp in ['CHFJPY.pro']:
+                self.instrument = temp; self.decimal = 3; self.pip = 0.0025
+            elif temp in ['EURCAD.pro']:
+                self.instrument = temp; self.decimal = 5; self.pip = 0.000025
+            elif temp in ['EURGBP.pro','EURCHF.pro']:
+                self.instrument = temp; self.decimal = 5; self.pip = 0.000015
+            else:
+                self.instrument = temp; self.decimal = 5; self.pip = 0.00001
+            self.replaced = 1
+            self.raw_data_b = None
+            if self.replacement_b != self.instrument_b:
+                self.instrument_b = self.replacement_b
 
     def replace(self, instrument, instrument_b, ls):
         if (instrument not in ls) and instrument != instrument_b:
