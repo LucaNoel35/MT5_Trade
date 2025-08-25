@@ -27,7 +27,7 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre = 62151134
+nombre = 62655881
 pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
@@ -588,9 +588,11 @@ class ConTrader:
                 print(f"Close failed {p.ticket} {p.symbol}: code={getattr(result,'retcode',None)} {getattr(result,'comment',None)}")
 
     # ---------- pairing & maintenance ----------
-    def replace_instrument(self):
-        if self.position != 0 or self.correlation != 0 or self.replacement == self.instrument:
-            return
+    def replace_instrument(self,force):
+
+        if force == False:
+            if self.position != 0 or self.correlation != 0 or self.replacement == self.instrument :
+                return
         # adjust decimals/pips when switching
         temp = self.replacement
         if temp in ['USDJPY.pro','EURJPY.pro','AUDJPY.pro']:
@@ -641,14 +643,14 @@ class ConTrader:
             temp = random.choice(Watchlist)
             if temp not in ls:
                 self.replacement = temp
-                self.replace_instrument()
+                self.replace_instrument(True)
 
     def random_change_instrument(self, Watchlist, ls):
         if self.position == 0:
             temp = random.choice(Watchlist)
             if temp not in ls:
                 self.replacement = temp
-                self.replace_instrument()
+                self.replace_instrument(True)
 
 
 # =========================
@@ -710,14 +712,14 @@ if __name__ == "__main__":
     mm.pull_ticks(); mm.pull_positions(); mm.pull_rates()
 
     # Instantiate traders
-    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, 1.5,  1.5,0, trader2_instrument,0.02,-1,1,-1,-1,-1)
+    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, 2,  2,0, trader2_instrument,0.02,-1,1,-1,-1,-1)
     trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1,2,1,0, trader1_instrument,0.02, 1,1, 1,-1,-1)
-    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, 1.5,  1.5,0, trader4_instrument,0.02,-1,1, 1,-1,-1)
+    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, 2,  2,0, trader4_instrument,0.02,-1,1, 1,-1,-1)
     trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1,2,1,0, trader3_instrument,0.02, 1,1,-1,-1,-1)
 
-    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, 1.5,  1.5,0, trader6_instrument,0.02, 1,1,-1,-1,-1)
+    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, 2,  2,0, trader6_instrument,0.02, 1,1,-1,-1,-1)
     trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1,2,1,0, trader5_instrument,0.02,-1,1, 1,-1,-1)
-    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, 1.5,  1.5,0, trader8_instrument,0.02, 1,1, 1,-1,-1)
+    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, 2,  2,0, trader8_instrument,0.02, 1,1, 1,-1,-1)
     trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1,2,1,0, trader7_instrument,0.02,-1,1,-1,-1,-1)
 
     traders = [trader1,trader2,trader3,trader4,trader5,trader6,trader7,trader8]
@@ -788,7 +790,7 @@ if __name__ == "__main__":
 
             # allow instrument replacement when safe
             for t in traders:
-                t.replace_instrument()
+                t.replace_instrument(False)
 
             # execute decisions
             for t in traders:
