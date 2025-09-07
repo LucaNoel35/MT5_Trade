@@ -27,9 +27,9 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre =  62309038               
-pwd = 'Sephiroth35*'
-server_name = 'OANDATMS-MT5'
+nombre = 88974476
+pwd = '!lPrKj8z'
+server_name = 'FOREXer-Server'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 
 number_of_instrument = 8
@@ -58,22 +58,22 @@ high_correlation_value = 0.75
 low_correlation_value = high_correlation_value / 3
 
 # Japanese market
-Watch_List = ['AUDJPY.pro', 'EURJPY.pro','GBPJPY.pro', 'CHFJPY.pro',
-              'USDJPY.pro','CADJPY.pro','NZDJPY.pro']
+Watch_List = ['AUDJPY', 'EURJPY','GBPJPY', 'CHFJPY',
+              'USDJPY','CADJPY','NZDJPY']
 # US market
-Watch_List_2 = ['AUDUSD.pro', 'EURUSD.pro','GBPUSD.pro', 'USDCHF.pro',
-                'USDCAD.pro','NZDUSD.pro']
+Watch_List_2 = ['AUDUSD', 'EURUSD','GBPUSD', 'USDCHF',
+                'USDCAD','NZDUSD']
 
-trader1_instrument='EURJPY.pro'
-trader2_instrument='USDJPY.pro'
-trader3_instrument='CADJPY.pro'
-trader4_instrument='AUDJPY.pro'
+trader1_instrument='EURJPY'
+trader2_instrument='USDJPY'
+trader3_instrument='CADJPY'
+trader4_instrument='AUDJPY'
 
 # Add more if needed (watch list 2)
-trader5_instrument='EURUSD.pro'
-trader6_instrument='GBPUSD.pro'
-trader7_instrument='AUDUSD.pro'
-trader8_instrument='NZDUSD.pro'
+trader5_instrument='EURUSD'
+trader6_instrument='GBPUSD'
+trader7_instrument='AUDUSD'
+trader8_instrument='NZDUSD'
 
 # =========================
 # ==== MARKET MANAGER =====
@@ -270,15 +270,15 @@ class ConTrader:
     # ---------- utils ----------
     def setUnits(self):
         # Pip/decimal normalization based on instrument
-        if self.instrument in ['USDJPY.pro','EURJPY.pro','AUDJPY.pro']:
+        if self.instrument in ['USDJPY','EURJPY','AUDJPY']:
             self.decimal = 3; self.pip = 0.001
-        elif self.instrument in ['NZDJPY.pro','GBPJPY.pro','CADJPY.pro']:
+        elif self.instrument in ['NZDJPY','GBPJPY','CADJPY']:
             self.decimal = 3; self.pip = 0.002
-        elif self.instrument in ['CHFJPY.pro']:
+        elif self.instrument in ['CHFJPY']:
             self.decimal = 3; self.pip = 0.0025
-        elif self.instrument in ['EURCAD.pro']:
+        elif self.instrument in ['EURCAD']:
             self.decimal = 5; self.pip = 0.000025
-        elif self.instrument in ['EURGBP.pro','EURCHF.pro']:
+        elif self.instrument in ['EURGBP','EURCHF']:
             self.decimal = 5; self.pip = 0.000015
         else:
             self.decimal = 5; self.pip = 0.00001
@@ -599,15 +599,15 @@ class ConTrader:
         # adjust decimals/pips when switching
         if self.position==0 and (self.correlation==0)  and (self.replacement!=self.instrument) :
             temp = self.replacement
-            if temp in ['USDJPY.pro','EURJPY.pro','AUDJPY.pro']:
+            if temp in ['USDJPY','EURJPY','AUDJPY']:
                 self.instrument = temp; self.decimal = 3; self.pip = 0.001
-            elif temp in ['NZDJPY.pro','GBPJPY.pro','CADJPY.pro']:
+            elif temp in ['NZDJPY','GBPJPY','CADJPY']:
                 self.instrument = temp; self.decimal = 3; self.pip = 0.002
-            elif temp in ['CHFJPY.pro']:
+            elif temp in ['CHFJPY']:
                 self.instrument = temp; self.decimal = 3; self.pip = 0.0025
-            elif temp in ['EURCAD.pro']:
+            elif temp in ['EURCAD']:
                 self.instrument = temp; self.decimal = 5; self.pip = 0.000025
-            elif temp in ['EURGBP.pro','EURCHF.pro']:
+            elif temp in ['EURGBP','EURCHF']:
                 self.instrument = temp; self.decimal = 5; self.pip = 0.000015
             else:
                 self.instrument = temp; self.decimal = 5; self.pip = 0.00001
