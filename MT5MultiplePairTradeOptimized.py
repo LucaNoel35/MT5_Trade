@@ -173,7 +173,7 @@ class MarketManager:
 
 class ConTrader:
     def __init__(self, mm: MarketManager, instrument, pip, decimal, strat, strat_close, gain, loss, space,
-                 instrument_b, pourcentage, hedge, initialize, beginning, safe, inverse):
+                 instrument_b, pourcentage, hedge, initialize, first_run, safe, inverse):
         self.mm = mm
         self.instrument = instrument
         self.instrument_b = instrument_b
@@ -205,8 +205,8 @@ class ConTrader:
         self.hedge_b = hedge
         self.initialize = initialize
         self.initialize_origin = initialize
-        self.beginning = beginning
-        self.beginning_origin = beginning
+        self.beginning = 1
+        self.beginning_origin = self.beginning
 
         self.units = 0.1
         self.initial_units = 0.1
@@ -266,38 +266,80 @@ class ConTrader:
         # throttle heavy calcs
         self._last_corr_check = 0.0
         self.corr_interval_s = 10.0  # check correlation at most every 10s
+
+
         self.emergency=0
+        self.first_run=first_run
+        self.first_run_origin = first_run
+
 
 
     # ---------- utils ----------
-    def setUnits(self):
-        # Pip/decimal normalization based on instrument
-        if self.instrument in ['USDJPY.pro','EURJPY.pro','AUDJPY.pro']:
-            self.decimal = 3; self.pip = 0.001
-        elif self.instrument in ['NZDJPY.pro','GBPJPY.pro','CADJPY.pro']:
-            self.decimal = 3; self.pip = 0.002
-        elif self.instrument in ['CHFJPY.pro']:
-            self.decimal = 3; self.pip = 0.0025
-        elif self.instrument in ['EURCAD.pro']:
-            self.decimal = 5; self.pip = 0.000025
-        elif self.instrument in ['EURGBP.pro','EURCHF.pro']:
-            self.decimal = 5; self.pip = 0.000015
-        else:
-            self.decimal = 5; self.pip = 0.00001
 
-        positions = mt5.positions_get()
-
-        # close any orphan positions once at startup (use cached positions later)
-        self.close_position(positions)
+    def setUnits(self, assigned_symbols=None):
+        if assigned_symbols is None:
+            assigned_symbols = []
 
         account_info = mt5.account_info()
         balance = account_info.balance if account_info else 0
         self.original_balance = balance
+
+        # Liste des symboles possibles pour ce trader
+        watchlist = Watch_List if self.instrument in Watch_List else Watch_List_2
+        possible_symbols = [s for s in watchlist if s not in assigned_symbols]
+
+        # Cherche position existante sur symboles disponibles
+        for s in possible_symbols:
+            positions = self.mm.get_positions(s)
+            if positions:
+                p = positions[0]
+                self.instrument = s
+                self.position = 1 if p.type == mt5.ORDER_TYPE_BUY else -1
+                self.latest_seen_position = self.position
+                self.price = p.price_open
+                self.units = p.volume
+                self.initial_units = self.units
+                self._set_pip_decimal(self.instrument)
+                print(f"{self.instrument} assigned from existing position, lots={self.units}")
+                self.beginning = -1
+                assigned_symbols.append(self.instrument)
+                return
+
+        # Aucun position existante → assigner premier symbole dispo
+        if possible_symbols:
+            self.instrument = possible_symbols[0]
+        # fallback si plus rien dispo
+        else:
+            self.instrument = self.instrument
+
         hedge_fac = hedge_factor if self.hedge == -1 else 1
-        lots = max(round((math.floor(((balance / 100000)*self.leverage)*100))/100 ,2),0.01)
+        lots = max(round((math.floor(((balance / 100000) * self.leverage) * 100)) / 100, 2), 0.01)
         self.units = round(hedge_fac * lots, 2)
         self.initial_units = self.units
-        print(self.instrument, self.units, "lots")
+        self.position = 0
+        self.latest_seen_position = 0
+        self.price = None
+        self._set_pip_decimal(self.instrument)
+        print(f"{self.instrument} no existing position, lots={self.units}")
+        self.beginning = 1
+        assigned_symbols.append(self.instrument)
+
+    # ---------- Helper pour assigner decimal/pip ----------
+    def _set_pip_decimal(self, instrument):
+        if instrument in ['USDJPY.pro','EURJPY.pro','AUDJPY.pro']:
+            self.decimal = 3; self.pip = 0.001
+        elif instrument in ['NZDJPY.pro','GBPJPY.pro','CADJPY.pro']:
+            self.decimal = 3; self.pip = 0.002
+        elif instrument in ['CHFJPY.pro']:
+            self.decimal = 3; self.pip = 0.0025
+        elif instrument in ['EURCAD.pro']:
+            self.decimal = 5; self.pip = 0.000025
+        elif instrument in ['EURGBP.pro','EURCHF.pro']:
+            self.decimal = 5; self.pip = 0.000015
+        else:
+            self.decimal = 5; self.pip = 0.00001
+
+
 
     def _update_spread(self, tick):
         self.ask = tick.ask
@@ -337,7 +379,7 @@ class ConTrader:
         if now - self._last_corr_check < self.corr_interval_s:
             return
         if self.raw_data is None or self.raw_data_b is None:
-            self.correlation = 1
+            self.correlation = 0
             self._last_corr_check = now
             return
         data = {
@@ -347,7 +389,7 @@ class ConTrader:
         df = pd.DataFrame(data)
         corr_df = df.corr()
         if corr_df.where(corr_df < 1).stack().empty:
-            self.correlation = 1
+            self.correlation = 0
         else:
             max_corr_index = corr_df.where(corr_df < 1).stack().idxmax()
             corr = corr_df.loc[max_corr_index]
@@ -356,7 +398,7 @@ class ConTrader:
 
     def highly_correlate(self):
         if self.raw_data is None or self.raw_data_b is None:
-            self.correlation = 1
+            self.correlation = 0
             return
         data = {
             self.instrument_b: self.raw_data_b['c'],
@@ -365,7 +407,7 @@ class ConTrader:
         df = pd.DataFrame(data)
         corr_df = df.corr()
         if corr_df.where(corr_df < 1).stack().empty:
-            self.correlation = 1
+            self.correlation = 0
         else:
             max_corr_index = corr_df.where(corr_df < 1).stack().idxmax()
             corr = corr_df.loc[max_corr_index]
@@ -521,19 +563,18 @@ class ConTrader:
             if self.count > 5:
                 self.position = 0; self.PL = 0
 
-            can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and self.correlation == 1 and self.emergency == 0 and not self.quota and ((self.count > 5 and self.beginning != 1) or self.beginning == 1) and self.instrument!=self.instrument_b and self.position==0)
+            can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and self.correlation == 1 and self.emergency == 0 and (not self.quota) and ((self.count > 5 and self.beginning != 1) or self.beginning == 1) and self.instrument!=self.instrument_b and self.position==0)
             if can_trade:
                 # sell setup
-                cond_sell = (((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position)) and (self.avg_space == 1 or apply_spread_avg == 0) and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1)
-                cond_buy = (((self.config == 1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == -1 and self.previous_position == self.latest_seen_position)) and (self.avg_space == 1 or apply_spread_avg == 0) and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == -1)
+                cond_sell = (((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position)) and (self.avg_space == 1 or apply_spread_avg == 0) and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1) or (self.first_run==1 and self.position_b == 0)
+                cond_buy = (((self.config == 1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == -1 and self.previous_position == self.latest_seen_position)) and (self.avg_space == 1 or apply_spread_avg == 0) and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == -1) or (self.first_run==1 and self.position_b == 0)
                 far_enough = (abs(self.close - self.price) > self.space*val) or (self.initialize == 1)
-
                 if cond_sell and far_enough:
                     self.sell_order(self.units)
-                    self.price = self.close; self.val = val; self.beginning = -1; self.initialize = -1; self.count = 0
+                    self.price = self.close; self.val = val; self.beginning = -1; self.initialize = -1; self.count = 0; self.first_run=0
                 elif cond_buy and far_enough:
                     self.buy_order(self.units)
-                    self.price = self.close; self.val = val; self.beginning = -1; self.initialize = -1; self.count = 0
+                    self.price = self.close; self.val = val; self.beginning = -1; self.initialize = -1; self.count = 0; self.first_run=0
 
     # ---------- orders ----------
     def sell_order(self, value):
@@ -727,20 +768,21 @@ if __name__ == "__main__":
     mm.pull_ticks(); mm.pull_positions(); mm.pull_rates()
 
     # Instantiate traders
-    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, 1.5,  1.5,0, trader2_instrument,0.02,-1,1,-1,-1,-1)
+    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, 1.5,  1.5,0, trader2_instrument,0.02,-1,1,0,-1,-1)
     trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1, 2, 1,0, trader1_instrument,0.02, 1,1, 1,-1,-1)
-    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, 1.5,  1.5,0, trader4_instrument,0.02,-1,1, 1,-1,-1)
-    trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1, 2, 1,0, trader3_instrument,0.02, 1,1,-1,-1,-1)
+    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, 1.5,  1.5,0, trader4_instrument,0.02,-1,1, 0,-1,-1)
+    trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1, 2, 1,0, trader3_instrument,0.02, 1,1,1,-1,-1)
 
-    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, 1.5,  1.5,0, trader6_instrument,0.02, 1,1,-1,-1,-1)
+    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, 1.5,  1.5,0, trader6_instrument,0.02, 1,1,0,-1,-1)
     trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1, 2, 1,0, trader5_instrument,0.02,-1,1, 1,-1,-1)
-    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, 1.5,  1.5,0, trader8_instrument,0.02, 1,1, 1,-1,-1)
-    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1, 2, 1,0, trader7_instrument,0.02,-1,1,-1,-1,-1)
+    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, 1.5,  1.5,0, trader8_instrument,0.02, 1,1, 0,-1,-1)
+    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1, 2, 1,0, trader7_instrument,0.02,-1,1,1,-1,-1)
 
     traders = [trader1,trader2,trader3,trader4,trader5,trader6,trader7,trader8]
 
+    assigned_symbols = []
     for t in traders:
-        t.setUnits()
+        t.setUnits(assigned_symbols)
 
     # Prime correlation state with preloaded bars
     for t in traders:
@@ -810,27 +852,6 @@ if __name__ == "__main__":
             for t in traders:
                 t.replace_instrument()
               
-            # --- Paire 1 ---
-            if (trader1.position != 0 or trader2.position != 0) and (trader1.beginning == 1 or trader2.beginning == 1):
-                trader1.beginning=-1
-                trader2.beginning=-1
-            
-            # --- Paire 2 ---
-            if (trader3.position != 0 or trader4.position != 0) and (trader3.beginning == 1 or trader4.beginning == 1):
-                trader3.beginning=-1
-                trader4.beginning=-1
-
-            
-            # --- Paire 3 ---
-            if (trader5.position != 0 or trader6.position != 0) and (trader5.beginning == 1 or trader6.beginning == 1):
-                trader5.beginning=-1
-                trader6.beginning=-1
-
-            
-            # --- Paire 4 ---
-            if (trader7.position != 0 or trader8.position != 0) and (trader7.beginning == 1 or trader8.beginning == 1):
-                trader7.beginning=-1
-                trader8.beginning=-1
 
             # execute decisions
             for t in traders:
