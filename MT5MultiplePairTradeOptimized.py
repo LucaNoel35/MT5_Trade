@@ -268,7 +268,7 @@ class ConTrader:
         self.corr_interval_s = 10.0  # check correlation at most every 10s
 
 
-        self.emergency=1
+        self.emergency=0
         self.first_run=first_run
         self.first_run_origin = first_run
 
@@ -847,15 +847,13 @@ if __name__ == "__main__":
             trader7.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader6.instrument,trader8.instrument,trader7.instrument_b])
             trader8.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument_b])
 
-          
-            # allow instrument replacement when safe
-            for t in traders:
-                t.replace_instrument()
-              
-
             # execute decisions
             for t in traders:
                 t.execute_trades()
+
+            # allow instrument replacement when safe
+            for t in traders:
+                t.replace_instrument()
 
             # pace with timeframe; 0.1s is enough for M1
             time.sleep(0.1)
