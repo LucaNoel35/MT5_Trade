@@ -27,7 +27,7 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre =  62614825              
+nombre =  62151134              
 pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
@@ -266,6 +266,8 @@ class ConTrader:
         # throttle heavy calcs
         self._last_corr_check = 0.0
         self.corr_interval_s = 10.0  # check correlation at most every 10s
+        self.emergency=0
+
 
     # ---------- utils ----------
     def setUnits(self):
@@ -474,6 +476,11 @@ class ConTrader:
                 self.close_position(positions)
                 self.price = self.close
                 return
+            
+            if self.emergency==1:
+                self.close_position(positions)
+                self.price = self.close
+                return            
 
             # closing logic mirrors original but uses cached values
             if p0.type == 0:  # BUY open
@@ -514,7 +521,7 @@ class ConTrader:
             if self.count > 5:
                 self.position = 0; self.PL = 0
 
-            can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and self.correlation == 1 and not self.quota and ((self.count > 5 and self.beginning != 1) or self.beginning == 1) and self.instrument!=self.instrument_b and self.position==0)
+            can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and self.correlation == 1 and self.emergency == 0 and not self.quota and ((self.count > 5 and self.beginning != 1) or self.beginning == 1) and self.instrument!=self.instrument_b and self.position==0)
             if can_trade:
                 # sell setup
                 cond_sell = (((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position)) and (self.avg_space == 1 or apply_spread_avg == 0) and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1)
@@ -597,7 +604,7 @@ class ConTrader:
     # ---------- pairing & maintenance ----------
     def replace_instrument(self):
         # adjust decimals/pips when switching
-        if self.position==0 and ((self.correlation==0) or (self.instrument==self.instrument_b)) and (self.replacement!=self.instrument) :
+        if self.position==0 and ((self.correlation==0) or (self.emergency==1)) and (self.replacement!=self.instrument) :
             temp = self.replacement
             if temp in ['USDJPY.pro','EURJPY.pro','AUDJPY.pro']:
                 self.instrument = temp; self.decimal = 3; self.pip = 0.001
@@ -643,11 +650,15 @@ class ConTrader:
             self.replacement_b = trader_b.instrument
 
     def emergency_change_instrument(self, Watchlist, ls):
-        if (self.instrument in ls) and self.position == 0:
+        if (self.instrument in ls) :
+            self.emergency=1
             temp = random.choice(Watchlist)
             if temp not in ls:
                 self.replacement = temp
                 self.replace_instrument()
+        else:
+            self.emergency=0
+
 
     def random_change_instrument(self, Watchlist, ls):
         if self.position == 0:
@@ -716,15 +727,15 @@ if __name__ == "__main__":
     mm.pull_ticks(); mm.pull_positions(); mm.pull_rates()
 
     # Instantiate traders
-    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, 1.5,  1.5,0, trader2_instrument,0.02,-1,1,1,-1,-1)
+    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, 1.5,  1.5,0, trader2_instrument,0.02,-1,1,-1,-1,-1)
     trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1, 2, 1,0, trader1_instrument,0.02, 1,1, 1,-1,-1)
     trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, 1.5,  1.5,0, trader4_instrument,0.02,-1,1, 1,-1,-1)
-    trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1, 2, 1,0, trader3_instrument,0.02, 1,1,1,-1,-1)
+    trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1, 2, 1,0, trader3_instrument,0.02, 1,1,-1,-1,-1)
 
-    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, 1.5,  1.5,0, trader6_instrument,0.02, 1,1,1,-1,-1)
+    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, 1.5,  1.5,0, trader6_instrument,0.02, 1,1,-1,-1,-1)
     trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1, 2, 1,0, trader5_instrument,0.02,-1,1, 1,-1,-1)
     trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, 1.5,  1.5,0, trader8_instrument,0.02, 1,1, 1,-1,-1)
-    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1, 2, 1,0, trader7_instrument,0.02,-1,1,1,-1,-1)
+    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1, 2, 1,0, trader7_instrument,0.02,-1,1,-1,-1,-1)
 
     traders = [trader1,trader2,trader3,trader4,trader5,trader6,trader7,trader8]
 
@@ -751,8 +762,7 @@ if __name__ == "__main__":
         if pd.to_datetime("21:00").time() < now.time() < pd.to_datetime("22:00").time():
             break
         """
-        
-        
+                
 
         # keep MT5 session alive / re-init if needed
         if mt5.last_error()[0] != 1:
@@ -795,9 +805,32 @@ if __name__ == "__main__":
             trader7.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader6.instrument,trader8.instrument,trader7.instrument_b])
             trader8.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument_b])
 
+          
             # allow instrument replacement when safe
             for t in traders:
                 t.replace_instrument()
+              
+            # --- Paire 1 ---
+            if (trader1.position != 0 or trader2.position != 0) and (trader1.beginning == 1 or trader2.beginning == 1):
+                trader1.beginning=-1
+                trader2.beginning=-1
+            
+            # --- Paire 2 ---
+            if (trader3.position != 0 or trader4.position != 0) and (trader3.beginning == 1 or trader4.beginning == 1):
+                trader3.beginning=-1
+                trader4.beginning=-1
+
+            
+            # --- Paire 3 ---
+            if (trader5.position != 0 or trader6.position != 0) and (trader5.beginning == 1 or trader6.beginning == 1):
+                trader5.beginning=-1
+                trader6.beginning=-1
+
+            
+            # --- Paire 4 ---
+            if (trader7.position != 0 or trader8.position != 0) and (trader7.beginning == 1 or trader8.beginning == 1):
+                trader7.beginning=-1
+                trader8.beginning=-1
 
             # execute decisions
             for t in traders:
