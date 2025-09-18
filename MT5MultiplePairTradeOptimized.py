@@ -27,7 +27,7 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre =  62414265              
+nombre =  62281627              
 pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
@@ -478,8 +478,8 @@ class ConTrader:
             # closing logic mirrors original but uses cached values
             if p0.type == 0:  # BUY open
                 cond_ok_spread = ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip) and self.position_b == -1) or self.position_b != -1
-                cond_ok_buy_b = ((self.instrument_b_obj_reached_sell and self.close*self.inverse >= self.price*self.inverse and ((self.config_b == 1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == -1*self.strat_close and self.strat_close==self.strat_close_b))) or self.close*self.inverse < self.price*self.inverse)
-                #cond_ok_buy_b = ((self.config_b == 1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == -1*self.strat_close and self.strat_close==self.strat_close_b)) and((self.instrument_b_obj_reached_sell and self.close*self.inverse >= self.price*self.inverse ) or self.close*self.inverse < self.price*self.inverse)
+                #cond_ok_buy_b = ((self.instrument_b_obj_reached_sell and self.close*self.inverse >= self.price*self.inverse and ((self.config_b == 1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == -1*self.strat_close and self.strat_close==self.strat_close_b))) or self.close*self.inverse < self.price*self.inverse)
+                cond_ok_buy_b = ((self.config_b == 1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == -1*self.strat_close and self.strat_close==self.strat_close_b)) and((self.instrument_b_obj_reached_sell and self.close*self.inverse >= self.price*self.inverse ) or self.close*self.inverse < self.price*self.inverse)
 
                 if cond_ok_spread:
                     if (self.config == 1*self.strat_close and self.objectif_reached_buy(self.price) and cond_ok_buy_b and (self.position_b == -1 and self.safe == -1)):
@@ -493,8 +493,8 @@ class ConTrader:
                         if self.space == 0: self.previous_position = 1
             else:  # SELL open
                 cond_ok_spread = ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip) and self.position_b == 1) or self.position_b != 1
-                cond_ok_sell_b = ((self.instrument_b_obj_reached_buy and self.close*self.inverse <= self.price*self.inverse and ((self.config_b == -1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == 1*self.strat_close and self.strat_close==self.strat_close_b))) or self.close*self.inverse > self.price*self.inverse)
-                #cond_ok_sell_b = ((self.config_b == -1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == 1*self.strat_close and self.strat_close==self.strat_close_b)) and ((self.instrument_b_obj_reached_buy and self.close*self.inverse <= self.price*self.inverse ) or self.close*self.inverse > self.price*self.inverse)
+                #cond_ok_sell_b = ((self.instrument_b_obj_reached_buy and self.close*self.inverse <= self.price*self.inverse and ((self.config_b == -1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == 1*self.strat_close and self.strat_close==self.strat_close_b))) or self.close*self.inverse > self.price*self.inverse)
+                cond_ok_sell_b = ((self.config_b == -1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == 1*self.strat_close and self.strat_close==self.strat_close_b)) and ((self.instrument_b_obj_reached_buy and self.close*self.inverse <= self.price*self.inverse ) or self.close*self.inverse > self.price*self.inverse)
                 if cond_ok_spread:
                     if (self.config == -1*self.strat_close and self.objectif_reached_sell(self.price)  and cond_ok_sell_b and (self.position_b == 1 and self.safe == -1)):
                         self.price = self.close; self.count = 0; self.close_position(positions)
@@ -597,7 +597,7 @@ class ConTrader:
     # ---------- pairing & maintenance ----------
     def replace_instrument(self):
         # adjust decimals/pips when switching
-        if self.position==0 and (self.correlation==0)  and (self.replacement!=self.instrument) :
+        if self.position==0 and ((self.correlation==0) or (self.instrument==self.instrument_b)) and (self.replacement!=self.instrument) :
             temp = self.replacement
             if temp in ['USDJPY.pro','EURJPY.pro','AUDJPY.pro']:
                 self.instrument = temp; self.decimal = 3; self.pip = 0.001
@@ -716,15 +716,15 @@ if __name__ == "__main__":
     mm.pull_ticks(); mm.pull_positions(); mm.pull_rates()
 
     # Instantiate traders
-    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, 1.5,  1.5,0, trader2_instrument,0.02,-1,1,-1,-1-1)
-    trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1, 2, 1,0, trader1_instrument,0.02, 1,1, 1,-1,-1)
-    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, 1.5,  1.5,0, trader4_instrument,0.02,-1,1, 1,-1,-1)
-    trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1, 2, 1,0, trader3_instrument,0.02, 1,1,-1,-1,-1)
+    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, 1,  2,0, trader2_instrument,0.02,-1,1,-1,-1,-1)
+    trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1, 1.5, 1,0, trader1_instrument,0.02, 1,1, 1,-1,-1)
+    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, 1,  2,0, trader4_instrument,0.02,-1,1, 1,-1,-1)
+    trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1, 1.5, 1,0, trader3_instrument,0.02, 1,1,-1,-1,-1)
 
-    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, 1.5,  1.5,0, trader6_instrument,0.02, 1,1,-1,-1,-1)
-    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1, 2, 1,0, trader5_instrument,0.02,-1,1, 1,-1,-1)
-    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, 1.5,  1.5,0, trader8_instrument,0.02, 1,1, 1,-1,-1)
-    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1, 2, 1,0, trader7_instrument,0.02,-1,1,-1,-1,-1)
+    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, 1,  2,0, trader6_instrument,0.02, 1,1,-1,-1,-1)
+    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1, 1.5, 1,0, trader5_instrument,0.02,-1,1, 1,-1,-1)
+    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, 1,  2,0, trader8_instrument,0.02, 1,1, 1,-1,-1)
+    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1, 1.5, 1,0, trader7_instrument,0.02,-1,1,-1,-1,-1)
 
     traders = [trader1,trader2,trader3,trader4,trader5,trader6,trader7,trader8]
 
@@ -747,8 +747,10 @@ if __name__ == "__main__":
         now = datetime.now(timezone.utc)
         
         # stop conditions (same as original, but more compact)
+        """
         if pd.to_datetime("21:00").time() < now.time() < pd.to_datetime("22:00").time():
             break
+        """
         
         
 
