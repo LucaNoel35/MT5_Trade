@@ -768,13 +768,13 @@ if __name__ == "__main__":
     mm.pull_ticks(); mm.pull_positions(); mm.pull_rates()
 
     # Instantiate traders
-    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, 1.5,  1.5,0, trader2_instrument,0.02,-1,1,0,-1,-1)
-    trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1, 2, 1,0, trader1_instrument,0.02, 1,1, 1,-1,-1)
+    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, 1.5,  1.5,0, trader2_instrument,0.02,-1,1,1,-1,-1)
+    trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1, 2, 1,0, trader1_instrument,0.02, 1,1, 0,-1,-1)
     trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, 1.5,  1.5,0, trader4_instrument,0.02,-1,1, 0,-1,-1)
     trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1, 2, 1,0, trader3_instrument,0.02, 1,1,1,-1,-1)
 
-    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, 1.5,  1.5,0, trader6_instrument,0.02, 1,1,0,-1,-1)
-    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1, 2, 1,0, trader5_instrument,0.02,-1,1, 1,-1,-1)
+    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, 1.5,  1.5,0, trader6_instrument,0.02, 1,1,1,-1,-1)
+    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1, 2, 1,0, trader5_instrument,0.02,-1,1, 0,-1,-1)
     trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, 1.5,  1.5,0, trader8_instrument,0.02, 1,1, 0,-1,-1)
     trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1, 2, 1,0, trader7_instrument,0.02,-1,1,1,-1,-1)
 
