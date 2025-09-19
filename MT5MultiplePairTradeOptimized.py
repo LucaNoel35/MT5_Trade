@@ -800,10 +800,10 @@ if __name__ == "__main__":
         now = datetime.now(timezone.utc)
         
         # stop conditions (same as original, but more compact)
-        """
+        
         if pd.to_datetime("21:00").time() < now.time() < pd.to_datetime("22:00").time():
             break
-        """
+        
                 
 
         # keep MT5 session alive / re-init if needed
