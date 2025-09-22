@@ -268,7 +268,7 @@ class ConTrader:
         self.corr_interval_s = 10.0  # check correlation at most every 10s
 
 
-        self.emergency=0
+        self.emergency=1
         self.first_run=first_run
         self.first_run_origin = first_run
 
