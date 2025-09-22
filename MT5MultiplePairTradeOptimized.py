@@ -661,6 +661,7 @@ class ConTrader:
                 self.instrument = temp; self.decimal = 5; self.pip = 0.00001
             self.replaced = 1
             self.raw_data_b = None
+            self._last_corr_check  = 0.0
             if self.replacement_b != self.instrument_b:
                 self.instrument_b = self.replacement_b
 
