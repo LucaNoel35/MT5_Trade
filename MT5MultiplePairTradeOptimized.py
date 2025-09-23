@@ -62,7 +62,7 @@ Watch_List = ['AUDJPY.pro', 'EURJPY.pro','GBPJPY.pro', 'CHFJPY.pro',
               'USDJPY.pro','CADJPY.pro','NZDJPY.pro']
 # US market
 Watch_List_2 = ['AUDUSD.pro', 'EURUSD.pro','GBPUSD.pro', 'USDCHF.pro',
-                'USDCAD.pro','NZDUSD.pro','USDJPY.pro']
+                'USDCAD.pro','NZDUSD.pro']
 
 trader1_instrument='EURJPY.pro'
 trader2_instrument='USDJPY.pro'
