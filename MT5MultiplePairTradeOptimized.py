@@ -302,6 +302,7 @@ class ConTrader:
                 self._set_pip_decimal(self.instrument)
                 print(f"{self.instrument} assigned from existing position, lots={self.units}")
                 self.beginning = -1
+                self.first_run=0
                 assigned_symbols.append(self.instrument)
                 return
 
