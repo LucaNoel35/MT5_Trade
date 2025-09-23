@@ -527,7 +527,9 @@ class ConTrader:
 
             if self.beginning==1:
                 self.beginning = -1
-
+              
+            if self.first_run!=0:
+                self.first_run=0
             # closing logic mirrors original but uses cached values
             if p0.type == 0:  # BUY open
                 cond_ok_spread = ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip) and self.position_b == -1) or self.position_b != -1
