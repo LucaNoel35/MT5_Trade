@@ -521,7 +521,7 @@ class ConTrader:
                 self.price = self.close
                 return
             
-            if self.double_instrument==1:
+            if self.double_instrument==1 and self.position!=0:
                 self.close_position(positions)
                 self.price = self.close
                 return       
