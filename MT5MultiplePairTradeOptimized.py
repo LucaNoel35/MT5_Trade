@@ -269,6 +269,7 @@ class ConTrader:
 
 
         self.emergency=1
+        self.double_instrument=1
         self.first_run=first_run
         self.first_run_origin = first_run
 
@@ -520,7 +521,7 @@ class ConTrader:
                 self.price = self.close
                 return
             
-            if self.emergency==1:
+            if self.double_instrument==1:
                 self.close_position(positions)
                 self.price = self.close
                 return       
@@ -569,7 +570,7 @@ class ConTrader:
             if self.count > 5:
                 self.position = 0; self.PL = 0
 
-            can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and self.correlation == 1 and self.emergency == 0 and (not self.quota) and ((self.count > 5 and self.beginning != 1) or self.beginning == 1) and self.instrument!=self.instrument_b and self.position==0)
+            can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and self.correlation == 1 and self.emergency == 0 and self.double_instrument==0 and (not self.quota) and ((self.count > 5 and self.beginning != 1) or self.beginning == 1) and self.instrument!=self.instrument_b and self.position==0)
             if can_trade:
                 # sell setup
                 cond_sell = (((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position)) and (self.avg_space == 1 or apply_spread_avg == 0) and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1) or (self.first_run==-1 and self.position_b == 0)
@@ -700,12 +701,20 @@ class ConTrader:
     def emergency_change_instrument(self, Watchlist, ls):
         if (self.instrument in ls) :
             self.emergency=1
+            self.double_instrument=1
+            temp = random.choice(Watchlist)
+            if temp not in ls:
+                self.replacement = temp
+                self.replace_instrument()
+        elif (self.instrument==self.instrument_b) :
+            self.emergency=1
             temp = random.choice(Watchlist)
             if temp not in ls:
                 self.replacement = temp
                 self.replace_instrument()
         else:
             self.emergency=0
+            self.double_instrument=0
 
 
     def random_change_instrument(self, Watchlist, ls):
@@ -850,15 +859,15 @@ if __name__ == "__main__":
             trader7.place_info(trader8); trader8.place_info(trader7)
 
             # emergency changes (use watchlists)
-            trader1.emergency_change_instrument(Watch_List,[trader2.instrument,trader3.instrument,trader4.instrument,trader1.instrument_b])
-            trader2.emergency_change_instrument(Watch_List,[trader1.instrument,trader3.instrument,trader4.instrument,trader2.instrument_b])
-            trader3.emergency_change_instrument(Watch_List,[trader2.instrument,trader1.instrument,trader4.instrument,trader3.instrument_b])
-            trader4.emergency_change_instrument(Watch_List,[trader3.instrument,trader2.instrument,trader1.instrument,trader4.instrument_b])
+            trader1.emergency_change_instrument(Watch_List,[trader2.instrument,trader3.instrument,trader4.instrument])
+            trader2.emergency_change_instrument(Watch_List,[trader1.instrument,trader3.instrument,trader4.instrument])
+            trader3.emergency_change_instrument(Watch_List,[trader2.instrument,trader1.instrument,trader4.instrument])
+            trader4.emergency_change_instrument(Watch_List,[trader3.instrument,trader2.instrument,trader1.instrument])
 
-            trader5.emergency_change_instrument(Watch_List_2,[trader6.instrument,trader7.instrument,trader8.instrument,trader5.instrument_b])
-            trader6.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader7.instrument,trader8.instrument,trader6.instrument_b])
-            trader7.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader6.instrument,trader8.instrument,trader7.instrument_b])
-            trader8.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument_b])
+            trader5.emergency_change_instrument(Watch_List_2,[trader6.instrument,trader7.instrument,trader8.instrument])
+            trader6.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader7.instrument,trader8.instrument])
+            trader7.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader6.instrument,trader8.instrument])
+            trader8.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader6.instrument,trader7.instrument])
 
             # execute decisions
             for t in traders:
