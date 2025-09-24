@@ -811,12 +811,6 @@ if __name__ == "__main__":
     for idx, t in enumerate(traders, start=1):
         print(f"Trader{idx} {t.instrument} corr={t.correlation}")
 
-    print("Warmup info placement:")
-    trader1.place_info(trader2); trader2.place_info(trader1)
-    trader3.place_info(trader4); trader4.place_info(trader3)
-    trader5.place_info(trader6); trader6.place_info(trader5)
-    trader7.place_info(trader8); trader8.place_info(trader7)
-
     # Main scheduler loop
     while True:
         now = datetime.now(timezone.utc)
