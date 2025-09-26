@@ -54,15 +54,15 @@ correlation_number = 120
 correlation_multiplier = 4
 correlation_divider = 2
 
-high_correlation_value = 0.75
-low_correlation_value = high_correlation_value / 3
+high_correlation_value = 0.25
+low_correlation_value = high_correlation_value * 3
 
 # Japanese market
 Watch_List = ['AUDJPY.pro', 'EURJPY.pro','GBPJPY.pro', 'CHFJPY.pro',
               'USDJPY.pro','CADJPY.pro','NZDJPY.pro']
 # US and EUR market
 Watch_List_2 = ['AUDUSD.pro', 'EURUSD.pro','GBPUSD.pro', 'USDCHF.pro',
-                'USDCAD.pro','NZDUSD.pro']
+                'USDCAD.pro','NZDUSD.pro','EURGBP.pro','EURCAD.pro','EURCHF.pro']
 
 trader1_instrument='EURJPY.pro'
 trader2_instrument='USDJPY.pro'
@@ -395,7 +395,7 @@ class ConTrader:
         else:
             max_corr_index = corr_df.where(corr_df < 1).stack().idxmax()
             corr = corr_df.loc[max_corr_index]
-            self.correlation = 1 if corr > low_correlation_value and (self.instrument != self.instrument_b) else 0
+            self.correlation = 0 if corr > low_correlation_value and (self.instrument != self.instrument_b) else 1
         self._last_corr_check = now
 
     def highly_correlate(self):
@@ -413,7 +413,7 @@ class ConTrader:
         else:
             max_corr_index = corr_df.where(corr_df < 1).stack().idxmax()
             corr = corr_df.loc[max_corr_index]
-            self.correlation = 1 if corr > high_correlation_value and (self.instrument != self.instrument_b) else 0
+            self.correlation = 0 if corr > high_correlation_value and (self.instrument != self.instrument_b) else 1
 
     def getEMA(self, df: pd.DataFrame):
         df['EMA_5'] = df['c'].ewm(span=5, min_periods=5).mean()
@@ -752,13 +752,13 @@ def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader
                 corr.at[i, j] = np.nan
 
     if trader1.position == 0 and trader2.position == 0:
-        max_corr_index = corr.where(corr < 1).stack().idxmax()
+        max_corr_index = corr.where(corr < 1).stack().idxmin()
     elif trader1.position != 0 and trader2.position == 0:
-        max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmax())
+        max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmin())
     elif trader1.position == 0 and trader2.position != 0:
-        max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmax(), trader2.instrument)
+        max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmin(), trader2.instrument)
     else:
-        max_corr_index = corr.where(corr < 1).stack().idxmax()
+        max_corr_index = corr.where(corr < 1).stack().idxmin()
 
     trader1.replace(max_corr_index[0], max_corr_index[1], ls)
     trader2.replace(max_corr_index[1], max_corr_index[0], ls)
