@@ -57,10 +57,11 @@ correlation_divider = 2
 high_correlation_value = 0.75
 low_correlation_value = high_correlation_value / 3
 
-# Japanese market
+# US and Japanese market
 Watch_List = ['AUDJPY.pro', 'EURJPY.pro','GBPJPY.pro', 'CHFJPY.pro',
-              'USDJPY.pro','CADJPY.pro','NZDJPY.pro','AUDUSD.pro', 'EURUSD.pro','GBPUSD.pro', 'USDCHF.pro',
-                'USDCAD.pro','NZDUSD.pro']
+              'USDJPY.pro','CADJPY.pro','NZDJPY.pro','AUDUSD.pro', 
+              'EURUSD.pro','GBPUSD.pro', 'USDCHF.pro',
+              'USDCAD.pro','NZDUSD.pro']
 
 trader1_instrument='EURJPY.pro'
 trader2_instrument='USDJPY.pro'
@@ -870,7 +871,7 @@ if __name__ == "__main__":
                 t.replace_instrument()
 
             # pace with timeframe; 1s is enough for M1
-            time.sleep(1)
+            time.sleep(1.0)
         except:
             print("Trading not active")
             print(mt5.last_error())
