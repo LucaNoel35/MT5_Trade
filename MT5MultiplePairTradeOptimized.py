@@ -518,7 +518,7 @@ class ConTrader:
                 self.price = self.close
                 return
             
-            if self.double_instrument==1 and self.position!=0:
+            if self.double_instrument>10 and self.position!=0 and self.position_b!=0:
                 self.close_position(positions)
                 self.price = self.close
                 return       
@@ -698,7 +698,7 @@ class ConTrader:
     def emergency_change_instrument(self, Watchlist, ls):
         if (self.instrument in ls) :
             self.emergency=1
-            self.double_instrument=1
+            self.double_instrument+=1
             temp = random.choice(Watchlist)
             if temp not in ls:
                 self.replacement = temp
@@ -869,8 +869,8 @@ if __name__ == "__main__":
             for t in traders:
                 t.replace_instrument()
 
-            # pace with timeframe; 0.1s is enough for M1
-            time.sleep(0.1)
+            # pace with timeframe; 1s is enough for M1
+            time.sleep(1)
         except:
             print("Trading not active")
             print(mt5.last_error())
