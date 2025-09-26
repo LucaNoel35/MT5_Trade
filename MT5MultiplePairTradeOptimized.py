@@ -54,14 +54,12 @@ correlation_number = 60
 correlation_multiplier = 4
 correlation_divider = 2
 
-high_correlation_value = 0.2
-low_correlation_value = high_correlation_value * 3
+high_correlation_value = 0.25
+low_correlation_value = high_correlation_value * 2
 
 # Japanese market
 Watch_List = ['AUDJPY.pro', 'EURJPY.pro','GBPJPY.pro', 'CHFJPY.pro',
-              'USDJPY.pro','CADJPY.pro','NZDJPY.pro']
-# US and EUR market
-Watch_List_2 = ['AUDUSD.pro', 'EURUSD.pro','GBPUSD.pro', 'USDCHF.pro',
+              'USDJPY.pro','CADJPY.pro','NZDJPY.pro','AUDUSD.pro', 'EURUSD.pro','GBPUSD.pro', 'USDCHF.pro',
                 'USDCAD.pro','NZDUSD.pro']
 
 trader1_instrument='EURJPY.pro'
@@ -286,7 +284,7 @@ class ConTrader:
         self.original_balance = balance
 
         # Liste des symboles possibles pour ce trader
-        watchlist = Watch_List if self.instrument in Watch_List else Watch_List_2
+        watchlist = Watch_List 
         possible_symbols = [s for s in watchlist if s not in assigned_symbols]
 
         # Cherche position existante sur symboles disponibles
@@ -746,11 +744,12 @@ def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader
     corr = df_all.corr()
 
     # mask invalid pairs
+    """
     for i in corr.index:
         for j in corr.columns:
             if ((i[-7:] != j[-7:] and i[:3] != j[:3])) or (i in ls or j in ls):
                 corr.at[i, j] = np.nan
-
+    """
     if trader1.position == 0 and trader2.position == 0:
         max_corr_index = corr.where(corr < 1).stack().idxmin()
     elif trader1.position != 0 and trader2.position == 0:
@@ -835,16 +834,16 @@ if __name__ == "__main__":
             # correlation maintenance (throttled via trader.corr_interval_s)
             # Pair 1
             if (trader1.correlation == 0 and trader1.replacement == trader1.instrument) or (trader2.correlation == 0 and trader2.replacement == trader2.instrument):
-                correlation_matrix(mm, trader1, trader2, [trader3.instrument, trader4.instrument], Watch_List)
+                correlation_matrix(mm, trader1, trader2, [trader3.instrument, trader4.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument], Watch_List)
             # Pair 2
             if (trader3.correlation == 0 and trader3.replacement == trader3.instrument) or (trader4.correlation == 0 and trader4.replacement == trader4.instrument):
-                correlation_matrix(mm, trader3, trader4, [trader2.instrument, trader1.instrument], Watch_List)
+                correlation_matrix(mm, trader3, trader4, [trader2.instrument, trader1.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument], Watch_List)
             # Pair 3
             if (trader5.correlation == 0 and trader5.replacement == trader5.instrument) or (trader6.correlation == 0 and trader6.replacement == trader6.instrument):
-                correlation_matrix(mm, trader5, trader6, [trader7.instrument, trader8.instrument], Watch_List_2)
+                correlation_matrix(mm, trader5, trader6, [trader7.instrument, trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument], Watch_List)
             # Pair 4
             if (trader7.correlation == 0 and trader7.replacement == trader7.instrument) or (trader8.correlation == 0 and trader8.replacement == trader8.instrument):
-                correlation_matrix(mm, trader7, trader8, [trader5.instrument, trader6.instrument], Watch_List_2)
+                correlation_matrix(mm, trader7, trader8, [trader5.instrument, trader6.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument], Watch_List)
 
             # propagate counterpart info
             trader1.place_info(trader2); trader2.place_info(trader1)
@@ -853,15 +852,15 @@ if __name__ == "__main__":
             trader7.place_info(trader8); trader8.place_info(trader7)
 
             # emergency changes (use watchlists)
-            trader1.emergency_change_instrument(Watch_List,[trader2.instrument,trader3.instrument,trader4.instrument])
-            trader2.emergency_change_instrument(Watch_List,[trader1.instrument,trader3.instrument,trader4.instrument])
-            trader3.emergency_change_instrument(Watch_List,[trader2.instrument,trader1.instrument,trader4.instrument])
-            trader4.emergency_change_instrument(Watch_List,[trader3.instrument,trader2.instrument,trader1.instrument])
+            trader1.emergency_change_instrument(Watch_List,[trader2.instrument,trader3.instrument,trader4.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument])
+            trader2.emergency_change_instrument(Watch_List,[trader1.instrument,trader3.instrument,trader4.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument])
+            trader3.emergency_change_instrument(Watch_List,[trader2.instrument,trader1.instrument,trader4.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument])
+            trader4.emergency_change_instrument(Watch_List,[trader3.instrument,trader2.instrument,trader1.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument])
 
-            trader5.emergency_change_instrument(Watch_List_2,[trader6.instrument,trader7.instrument,trader8.instrument])
-            trader6.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader7.instrument,trader8.instrument])
-            trader7.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader6.instrument,trader8.instrument])
-            trader8.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader6.instrument,trader7.instrument])
+            trader5.emergency_change_instrument(Watch_List_2,[trader6.instrument,trader7.instrument,trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
+            trader6.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader7.instrument,trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
+            trader7.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader6.instrument,trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
+            trader8.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader6.instrument,trader7.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
 
             # execute decisions
             for t in traders:
