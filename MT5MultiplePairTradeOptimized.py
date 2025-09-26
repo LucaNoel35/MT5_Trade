@@ -54,7 +54,7 @@ correlation_number = 120
 correlation_multiplier = 4
 correlation_divider = 2
 
-high_correlation_value = 0.25
+high_correlation_value = 0.2
 low_correlation_value = high_correlation_value * 3
 
 # Japanese market
