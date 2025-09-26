@@ -57,6 +57,9 @@ correlation_divider = 2
 high_correlation_value = 0.75
 low_correlation_value = high_correlation_value / 3
 
+# Time to wait to check double instrument in s
+time_check_double = 5.0
+
 # US and Japanese market
 Watch_List = ['AUDJPY.pro', 'EURJPY.pro','GBPJPY.pro', 'CHFJPY.pro',
               'USDJPY.pro','CADJPY.pro','NZDJPY.pro','AUDUSD.pro', 
@@ -519,7 +522,7 @@ class ConTrader:
                 self.price = self.close
                 return
             
-            if self.double_instrument>10 and self.position!=0 and self.position_b!=0:
+            if self.double_instrument>time_check_double and self.position!=0 and self.position_b!=0:
                 self.close_position(positions)
                 self.price = self.close
                 return       
