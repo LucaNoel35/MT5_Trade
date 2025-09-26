@@ -54,8 +54,8 @@ correlation_number = 60
 correlation_multiplier = 4
 correlation_divider = 2
 
-high_correlation_value = 0.25
-low_correlation_value = high_correlation_value * 2
+high_correlation_value = 0.75
+low_correlation_value = high_correlation_value / 3
 
 # Japanese market
 Watch_List = ['AUDJPY.pro', 'EURJPY.pro','GBPJPY.pro', 'CHFJPY.pro',
@@ -275,7 +275,7 @@ class ConTrader:
 
     # ---------- utils ----------
 
-    def setUnits(self, assigned_symbols=None):
+    def setUnits(self, watchlist, assigned_symbols=None):
         if assigned_symbols is None:
             assigned_symbols = []
 
@@ -284,7 +284,6 @@ class ConTrader:
         self.original_balance = balance
 
         # Liste des symboles possibles pour ce trader
-        watchlist = Watch_List 
         possible_symbols = [s for s in watchlist if s not in assigned_symbols]
 
         # Cherche position existante sur symboles disponibles
@@ -393,7 +392,7 @@ class ConTrader:
         else:
             max_corr_index = corr_df.where(corr_df < 1).stack().idxmax()
             corr = corr_df.loc[max_corr_index]
-            self.correlation = 0 if corr > low_correlation_value and (self.instrument != self.instrument_b) else 1
+            self.correlation = 1 if corr > low_correlation_value and (self.instrument != self.instrument_b) else 0
         self._last_corr_check = now
 
     def highly_correlate(self):
@@ -411,7 +410,7 @@ class ConTrader:
         else:
             max_corr_index = corr_df.where(corr_df < 1).stack().idxmax()
             corr = corr_df.loc[max_corr_index]
-            self.correlation = 0 if corr > high_correlation_value and (self.instrument != self.instrument_b) else 1
+            self.correlation = 1 if corr > high_correlation_value and (self.instrument != self.instrument_b) else 0
 
     def getEMA(self, df: pd.DataFrame):
         df['EMA_5'] = df['c'].ewm(span=5, min_periods=5).mean()
@@ -744,20 +743,20 @@ def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader
     corr = df_all.corr()
 
     # mask invalid pairs
-    """
+    
     for i in corr.index:
         for j in corr.columns:
             if ((i[-7:] != j[-7:] and i[:3] != j[:3])) or (i in ls or j in ls):
                 corr.at[i, j] = np.nan
-    """
+    
     if trader1.position == 0 and trader2.position == 0:
-        max_corr_index = corr.where(corr < 1).stack().idxmin()
+        max_corr_index = corr.where(corr < 1).stack().idxmax()
     elif trader1.position != 0 and trader2.position == 0:
-        max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmin())
+        max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmax())
     elif trader1.position == 0 and trader2.position != 0:
-        max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmin(), trader2.instrument)
+        max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmax(), trader2.instrument)
     else:
-        max_corr_index = corr.where(corr < 1).stack().idxmin()
+        max_corr_index = corr.where(corr < 1).stack().idxmax()
 
     trader1.replace(max_corr_index[0], max_corr_index[1], ls)
     trader2.replace(max_corr_index[1], max_corr_index[0], ls)
@@ -772,7 +771,7 @@ if __name__ == "__main__":
         print("initialize() failed")
         sys.exit(1)
 
-    all_symbols = sorted(set(Watch_List + Watch_List_2 + [
+    all_symbols = sorted(set(Watch_List + [
         trader1_instrument, trader2_instrument, trader3_instrument, trader4_instrument,
         trader5_instrument, trader6_instrument, trader7_instrument, trader8_instrument
     ]))
@@ -797,7 +796,7 @@ if __name__ == "__main__":
 
     assigned_symbols = []
     for t in traders:
-        t.setUnits(assigned_symbols)
+        t.setUnits(Watch_List,assigned_symbols)
 
     # Prime correlation state with preloaded bars
     for t in traders:
@@ -857,10 +856,10 @@ if __name__ == "__main__":
             trader3.emergency_change_instrument(Watch_List,[trader2.instrument,trader1.instrument,trader4.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument])
             trader4.emergency_change_instrument(Watch_List,[trader3.instrument,trader2.instrument,trader1.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument])
 
-            trader5.emergency_change_instrument(Watch_List_2,[trader6.instrument,trader7.instrument,trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
-            trader6.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader7.instrument,trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
-            trader7.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader6.instrument,trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
-            trader8.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader6.instrument,trader7.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
+            trader5.emergency_change_instrument(Watch_List,[trader6.instrument,trader7.instrument,trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
+            trader6.emergency_change_instrument(Watch_List,[trader5.instrument,trader7.instrument,trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
+            trader7.emergency_change_instrument(Watch_List,[trader5.instrument,trader6.instrument,trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
+            trader8.emergency_change_instrument(Watch_List,[trader5.instrument,trader6.instrument,trader7.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
 
             # execute decisions
             for t in traders:
