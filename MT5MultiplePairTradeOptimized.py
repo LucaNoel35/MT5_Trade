@@ -50,7 +50,7 @@ value_spread_multiplier = 10
 minimal_pip_multiplier = 20
 minimal_avg_pip_multiplier = 25
 
-correlation_number = 60
+correlation_number = 120
 correlation_multiplier = 4
 correlation_divider = 2
 
@@ -60,7 +60,7 @@ low_correlation_value = high_correlation_value / 3
 # Japanese market
 Watch_List = ['AUDJPY.pro', 'EURJPY.pro','GBPJPY.pro', 'CHFJPY.pro',
               'USDJPY.pro','CADJPY.pro','NZDJPY.pro']
-# US market
+# US and EUR market
 Watch_List_2 = ['AUDUSD.pro', 'EURUSD.pro','GBPUSD.pro', 'USDCHF.pro',
                 'USDCAD.pro','NZDUSD.pro']
 
