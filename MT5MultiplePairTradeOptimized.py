@@ -60,6 +60,9 @@ low_correlation_value = high_correlation_value / 3
 # Time to wait to check double instrument in s
 time_check_double = 5.0
 
+# Time to wait to check neutral position
+time_check_position = 1.0
+
 # US and Japanese market
 Watch_List = ['AUDJPY.pro', 'EURJPY.pro','GBPJPY.pro', 'CHFJPY.pro',
               'USDJPY.pro','CADJPY.pro','NZDJPY.pro','AUDUSD.pro', 
@@ -568,7 +571,7 @@ class ConTrader:
             timing = not (pd.to_datetime("20:45").time() < now.time() < pd.to_datetime("22:15").time())
             if self.price is None and self.close is not None:
                 self.price = self.close
-            if self.count > 5:
+            if self.count > time_check_position:
                 self.position = 0; self.PL = 0
 
             can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and self.correlation == 1 and self.emergency == 0 and self.double_instrument==0 and (not self.quota) and ((self.count > 5 and self.beginning != 1) or self.beginning == 1) and self.instrument!=self.instrument_b and self.position==0)
