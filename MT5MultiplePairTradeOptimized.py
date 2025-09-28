@@ -525,7 +525,7 @@ class ConTrader:
                 self.price = self.close
                 return
             
-            if self.double_instrument>time_check_double and self.position!=0 and self.position_b!=0:
+            if self.double_instrument>time_check_double and self.position!=0 and ((p0.type == 0 and self.objectif_reached_buy(self.price)) or (p0.type != 0 and self.objectif_reached_sell(self.price))):
                 self.close_position(positions)
                 self.price = self.close
                 return       
@@ -574,7 +574,7 @@ class ConTrader:
             if self.count > time_check_position:
                 self.position = 0; self.PL = 0
 
-            can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and self.correlation == 1 and self.emergency == 0 and self.double_instrument==0 and (not self.quota) and ((self.count > 5 and self.beginning != 1) or self.beginning == 1) and self.instrument!=self.instrument_b and self.position==0)
+            can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and self.correlation == 1 and self.emergency == 0 and self.double_instrument==0 and (not self.quota) and ((self.count > time_check_position and self.beginning != 1) or self.beginning == 1) and self.instrument!=self.instrument_b and self.position==0)
             if can_trade:
                 # sell setup
                 cond_sell = (((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position)) and (self.avg_space == 1 or apply_spread_avg == 0) and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1) or (self.first_run==-1 and self.position_b == 0)
