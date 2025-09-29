@@ -5,7 +5,6 @@ Optimized MT5 multi-pair trading bot
 - Centralized rates cache with smart throttling (only refresh when a new bar appears)
 - Single scheduler loop (no per-trader busy threads)
 - Traders read-only views over caches; only order_send makes API calls
-- Fewer MT5 calls in order/close flows (reuse cached ticks/prices)
 - Correlation checks throttled
 
 NOTE: Credentials are left as variables. Consider securing them via env vars.
@@ -54,8 +53,9 @@ correlation_number = 60
 correlation_multiplier = 4
 correlation_divider = 2
 
-high_correlation_value = 0.25
-low_correlation_value = high_correlation_value * 2
+correlation_inverse=1
+high_correlation_value = 0.75
+low_correlation_value = high_correlation_value/3
 
 # Time to wait to check double instrument in s
 time_check_double = 5.0
@@ -399,7 +399,7 @@ class ConTrader:
         else:
             max_corr_index = corr_df.where(corr_df < 1).stack().idxmax()
             corr = corr_df.loc[max_corr_index]
-            self.correlation = 0 if corr > low_correlation_value and (self.instrument != self.instrument_b) else 1
+            self.correlation = 1 if corr*correlation_inverse > low_correlation_value*correlation_inverse and (self.instrument != self.instrument_b) else 0
         self._last_corr_check = now
 
     def highly_correlate(self):
@@ -417,7 +417,7 @@ class ConTrader:
         else:
             max_corr_index = corr_df.where(corr_df < 1).stack().idxmax()
             corr = corr_df.loc[max_corr_index]
-            self.correlation = 0 if corr > high_correlation_value and (self.instrument != self.instrument_b) else 1
+            self.correlation = 1 if corr*correlation_inverse > high_correlation_value*correlation_inverse and (self.instrument != self.instrument_b) else 0
 
     def getEMA(self, df: pd.DataFrame):
         df['EMA_5'] = df['c'].ewm(span=5, min_periods=5).mean()
@@ -750,21 +750,30 @@ def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader
     corr = df_all.corr()
 
     # mask invalid pairs
-    """
-    for i in corr.index:
-        for j in corr.columns:
-            if ((i[-7:] != j[-7:] and i[:3] != j[:3])) or (i in ls or j in ls):
-                corr.at[i, j] = np.nan
-    """
-    
-    if trader1.position == 0 and trader2.position == 0:
-        max_corr_index = corr.where(corr < 1).stack().idxmin()
-    elif trader1.position != 0 and trader2.position == 0:
-        max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmin())
-    elif trader1.position == 0 and trader2.position != 0:
-        max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmin(), trader2.instrument)
+    if correlation_inverse==1:
+      for i in corr.index:
+          for j in corr.columns:
+              if ((i[-7:] != j[-7:] and i[:3] != j[:3])) or (i in ls or j in ls):
+                  corr.at[i, j] = np.nan
+                
+    if correlation_inverse==1:
+      if trader1.position == 0 and trader2.position == 0:
+          max_corr_index = corr.where(corr < 1).stack().idxmax()
+      elif trader1.position != 0 and trader2.position == 0:
+          max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmax())
+      elif trader1.position == 0 and trader2.position != 0:
+          max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmax(), trader2.instrument)
+      else:
+          max_corr_index = corr.where(corr < 1).stack().idxmax()
     else:
-        max_corr_index = corr.where(corr < 1).stack().idxmin()
+      if trader1.position == 0 and trader2.position == 0:
+          max_corr_index = corr.where(corr < 1).stack().idxmin()
+      elif trader1.position != 0 and trader2.position == 0:
+          max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmin())
+      elif trader1.position == 0 and trader2.position != 0:
+          max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmin(), trader2.instrument)
+      else:
+          max_corr_index = corr.where(corr < 1).stack().idxmin()
 
     trader1.replace(max_corr_index[0], max_corr_index[1], ls)
     trader2.replace(max_corr_index[1], max_corr_index[0], ls)
