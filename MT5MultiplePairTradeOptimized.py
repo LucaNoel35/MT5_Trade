@@ -756,6 +756,12 @@ def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader
           for j in corr.columns:
               if ((i[-7:] != j[-7:] and i[:3] != j[:3])) or (i in ls or j in ls):
                   corr.at[i, j] = np.nan
+
+    else:
+      for i in corr.index:
+          for j in corr.columns:
+              if ((i[-7:] == j[-7:] or i[:3] == j[:3])) or (i in ls or j in ls):
+                  corr.at[i, j] = np.nan    
     """
                 
     if correlation_inverse==1:
