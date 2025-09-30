@@ -873,6 +873,8 @@ if __name__ == "__main__":
         # stop conditions (same as original, but more compact)
         
         if pd.to_datetime("21:00").time() < now.time() < pd.to_datetime("22:00").time():
+            for t in traders:
+                t.reset()
             break
         
                 
@@ -933,6 +935,7 @@ if __name__ == "__main__":
             print(mt5.last_error())
 
     sys.exit(0)
+
 
 
 
