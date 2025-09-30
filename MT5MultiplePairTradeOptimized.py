@@ -57,7 +57,7 @@ correlation_inverse=1
 high_correlation_value = 0.75
 low_correlation_value = high_correlation_value/3
 
-
+selection_condition_buy_sell=1
 selection_gain_loss=1
 
 gain_plus=2
@@ -557,7 +557,7 @@ class ConTrader:
             # closing logic mirrors original but uses cached values
             if p0.type == 0:  # BUY open
                 cond_ok_spread = ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip) and self.position_b == -1) or self.position_b != -1
-                if correlation_inverse==-1:
+                if selection_condition_buy_sell==1:
                   cond_ok_buy_b = ((self.instrument_b_obj_reached_sell and self.close*self.inverse >= self.price*self.inverse and ((self.config_b == 1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == -1*self.strat_close and self.strat_close==self.strat_close_b))) or self.close*self.inverse < self.price*self.inverse)
                 else:
                   cond_ok_buy_b = ((self.config_b == 1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == -1*self.strat_close and self.strat_close==self.strat_close_b)) and((self.instrument_b_obj_reached_sell and self.close*self.inverse >= self.price*self.inverse ) or self.close*self.inverse < self.price*self.inverse)
@@ -574,7 +574,7 @@ class ConTrader:
                         if self.space == 0: self.previous_position = 1
             else:  # SELL open
                 cond_ok_spread = ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip) and self.position_b == 1) or self.position_b != 1
-                if correlation_inverse==-1:
+                if selection_condition_buy_sell==1:
                   cond_ok_sell_b = ((self.instrument_b_obj_reached_buy and self.close*self.inverse <= self.price*self.inverse and ((self.config_b == -1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == 1*self.strat_close and self.strat_close==self.strat_close_b))) or self.close*self.inverse > self.price*self.inverse)
                 else:
                   cond_ok_sell_b = ((self.config_b == -1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == 1*self.strat_close and self.strat_close==self.strat_close_b)) and ((self.instrument_b_obj_reached_buy and self.close*self.inverse <= self.price*self.inverse ) or self.close*self.inverse > self.price*self.inverse)
