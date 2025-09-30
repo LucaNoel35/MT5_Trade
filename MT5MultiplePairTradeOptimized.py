@@ -655,6 +655,12 @@ class ConTrader:
         else:
             print(f"BUY ok {self.instrument}: ret={getattr(result,'retcode',None)}")
 
+    def reset(self):
+      self.beginning=self.beginning_origin      
+      self.initialize=self.initialize_origin
+      self.first_run=self.first_run_origin
+      
+
     def close_position(self, positions):
         if not positions:
             return
