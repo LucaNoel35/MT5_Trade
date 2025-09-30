@@ -771,7 +771,7 @@ def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader
     corr = df_all.corr()
 
     # mask invalid pairs
-    """
+    
     if correlation_inverse==1:
       for i in corr.index:
           for j in corr.columns:
@@ -783,7 +783,7 @@ def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader
           for j in corr.columns:
               if ((i[-7:] == j[-7:] or i[:3] == j[:3])) or (i in ls or j in ls):
                   corr.at[i, j] = np.nan    
-    """
+    
                 
     if correlation_inverse==1:
       if trader1.position == 0 and trader2.position == 0:
