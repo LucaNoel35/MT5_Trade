@@ -53,6 +53,7 @@ correlation_number = 120
 correlation_multiplier = 4
 correlation_divider = 2
 
+#correlation inversed (-1) means high risk high reward, and vice versa
 correlation_inverse=1
 high_correlation_value = 0.75
 low_correlation_value = high_correlation_value/3
