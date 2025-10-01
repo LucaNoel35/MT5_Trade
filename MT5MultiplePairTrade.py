@@ -58,8 +58,9 @@ correlation_inverse=1
 high_correlation_value = 0.75
 low_correlation_value = high_correlation_value/3
 
-selection_condition_buy_sell=-1
+corr_by_name=1
 
+selection_condition_buy_sell=-1
 
 selection_gain_loss=2
 
@@ -659,6 +660,7 @@ class ConTrader:
         self.beginning=self.beginning_origin      
         self.initialize=self.initialize_origin
         self.first_run=self.first_run_origin
+      
 
     def close_position(self, positions):
         if not positions:
@@ -742,7 +744,7 @@ class ConTrader:
             if temp not in ls:
                 self.replacement = temp
                 self.replace_instrument()
-        elif (self.instrument==self.instrument_b) :
+        elif (self.instrument==self.instrument_b) or (self.instrument not in Watchlist ) or (self.instrument_b not in Watchlist ):
             self.emergency=1
             temp = random.choice(Watchlist)
             if temp not in ls:
@@ -782,38 +784,38 @@ def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader
     corr = df_all.corr()
 
     # mask invalid pairs
-    
-    if correlation_inverse==1:
-      for i in corr.index:
-          for j in corr.columns:
-              if ((i[-7:] != j[-7:] and i[:3] != j[:3])) or (i in ls or j in ls):
-                  corr.at[i, j] = np.nan
+    if corr_by_name==1:
+        if correlation_inverse==1:
+            for i in corr.index:
+                for j in corr.columns:
+                    if ((i[-7:] != j[-7:] and i[:3] != j[:3])) or (i in ls or j in ls):
+                        corr.at[i, j] = np.nan
 
-    else:
-      for i in corr.index:
-          for j in corr.columns:
-              if ((i[-7:] == j[-7:] or i[:3] == j[:3])) or (i in ls or j in ls):
-                  corr.at[i, j] = np.nan    
+        else:
+            for i in corr.index:
+                for j in corr.columns:
+                    if ((i[-7:] == j[-7:] or i[:3] == j[:3])) or (i in ls or j in ls):
+                        corr.at[i, j] = np.nan    
     
                 
     if correlation_inverse==1:
-      if trader1.position == 0 and trader2.position == 0:
-          max_corr_index = corr.where(corr < 1).stack().idxmax()
-      elif trader1.position != 0 and trader2.position == 0:
-          max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmax())
-      elif trader1.position == 0 and trader2.position != 0:
-          max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmax(), trader2.instrument)
-      else:
-          max_corr_index = corr.where(corr < 1).stack().idxmax()
+        if trader1.position == 0 and trader2.position == 0:
+            max_corr_index = corr.where(corr < 1).stack().idxmax()
+        elif trader1.position != 0 and trader2.position == 0:
+            max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmax())
+        elif trader1.position == 0 and trader2.position != 0:
+            max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmax(), trader2.instrument)
+        else:
+            max_corr_index = corr.where(corr < 1).stack().idxmax()
     else:
-      if trader1.position == 0 and trader2.position == 0:
-          max_corr_index = corr.where(corr < 1).stack().idxmin()
-      elif trader1.position != 0 and trader2.position == 0:
-          max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmin())
-      elif trader1.position == 0 and trader2.position != 0:
-          max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmin(), trader2.instrument)
-      else:
-          max_corr_index = corr.where(corr < 1).stack().idxmin()
+        if trader1.position == 0 and trader2.position == 0:
+            max_corr_index = corr.where(corr < 1).stack().idxmin()
+        elif trader1.position != 0 and trader2.position == 0:
+            max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmin())
+        elif trader1.position == 0 and trader2.position != 0:
+            max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmin(), trader2.instrument)
+        else:
+            max_corr_index = corr.where(corr < 1).stack().idxmin()
 
     trader1.replace(max_corr_index[0], max_corr_index[1], ls)
     trader2.replace(max_corr_index[1], max_corr_index[0], ls)
@@ -876,7 +878,7 @@ if __name__ == "__main__":
             for t in traders:
                 t.reset()
                 time.sleep(5.0)
-            break
+            #break
         
                 
 
@@ -936,9 +938,3 @@ if __name__ == "__main__":
             print(mt5.last_error())
 
     sys.exit(0)
-
-
-
-
-
-
