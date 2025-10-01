@@ -297,7 +297,7 @@ class ConTrader:
 
 
         self.emergency=1
-        self.double_instrument=0
+        self.double_instrument=1
         self.first_run=first_run
         self.first_run_origin = first_run
 
@@ -938,3 +938,4 @@ if __name__ == "__main__":
             print(mt5.last_error())
 
     sys.exit(0)
+
