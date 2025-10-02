@@ -54,15 +54,15 @@ correlation_multiplier = 4
 correlation_divider = 2
 
 #correlation inversed (-1) means high risk high reward, and vice versa
-correlation_inverse=-1
+correlation_inverse=1
 high_correlation_value = 0.75
 low_correlation_value = high_correlation_value/3
 
-corr_by_name=1
+corr_by_name=0
 
 selection_condition_buy_sell=-1
 
-selection_gain_loss=2
+selection_gain_loss=1
 
 gain_plus=2
 loss_plus=1
@@ -660,7 +660,7 @@ class ConTrader:
         self.beginning=self.beginning_origin      
         self.initialize=self.initialize_origin
         self.first_run=self.first_run_origin
-      
+        self.double_instrument=1      
 
     def close_position(self, positions):
         if not positions:
@@ -841,15 +841,15 @@ if __name__ == "__main__":
     mm.pull_ticks(); mm.pull_positions(); mm.pull_rates()
 
     # Instantiate traders
-    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader2_instrument,0.02,-1,1,1,-1,1)
-    trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1, gain_plus , loss_plus,0, trader1_instrument,0.02, 1,1, -1,-1,1)
-    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader4_instrument,0.02,-1,1, -1,-1,1)
-    trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1, gain_plus, loss_plus,0, trader3_instrument,0.02, 1,1,1,-1,1)
+    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader2_instrument,0.02,-1,1,1,-1,-1)
+    trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1, gain_plus , loss_plus,0, trader1_instrument,0.02, 1,1, -1,-1,-1)
+    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader4_instrument,0.02,-1,1, -1,-1,-1)
+    trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1, gain_plus, loss_plus,0, trader3_instrument,0.02, 1,1,1,-1,-1)
 
-    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader6_instrument,0.02, 1,1,1,-1,1)
-    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus,0, trader5_instrument,0.02,-1,1, -1,-1,1)
-    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader8_instrument,0.02, 1,1, -1,-1,1)
-    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus ,0, trader7_instrument,0.02,-1,1,1,-1,1)
+    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader6_instrument,0.02, 1,1,1,-1,-1)
+    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus,0, trader5_instrument,0.02,-1,1, -1,-1,-1)
+    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader8_instrument,0.02, 1,1, -1,-1,-1)
+    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus ,0, trader7_instrument,0.02,-1,1,1,-1,-1)
 
     traders = [trader1,trader2,trader3,trader4,trader5,trader6,trader7,trader8]
 
@@ -938,5 +938,6 @@ if __name__ == "__main__":
             print(mt5.last_error())
 
     sys.exit(0)
+
 
 
