@@ -660,7 +660,7 @@ class ConTrader:
         self.beginning=self.beginning_origin      
         self.initialize=self.initialize_origin
         self.first_run=self.first_run_origin
-      
+        self.double_instrument=1
 
     def close_position(self, positions):
         if not positions:
@@ -878,7 +878,7 @@ if __name__ == "__main__":
             for t in traders:
                 t.reset()
                 time.sleep(5.0)
-            #break
+            break
         
                 
 
