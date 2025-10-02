@@ -693,8 +693,7 @@ class ConTrader:
     def replace_instrument(self):
         # adjust decimals/pips when switching
         if self.position==0 and ((self.correlation==0) or (self.emergency==1)) and (self.replacement!=self.instrument) :
-            temp = self.replacement
-            self.instrument = temp
+            self.instrument = self.replacement
             self._set_pip_decimal(self.instrument)
             self.replaced = 1
             self.raw_data_b = None
