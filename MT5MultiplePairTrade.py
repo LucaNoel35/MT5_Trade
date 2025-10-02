@@ -756,7 +756,7 @@ class ConTrader:
 # ===== CORRELATION =======
 # =========================
 
-def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader, ls, watchlist,corr_by_name):
+def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader, ls, watchlist, corr_by_name):
     """Compute correlation only once centrally using cached bars; minimize MT5 calls."""
     data = {}
     for symbol in watchlist:
@@ -884,16 +884,16 @@ if __name__ == "__main__":
             # correlation maintenance (throttled via trader.corr_interval_s)
             # Pair 1
             if (trader1.correlation == 0 and trader1.replacement == trader1.instrument) or (trader2.correlation == 0 and trader2.replacement == trader2.instrument):
-                correlation_matrix(mm, trader1, trader2, [trader3.instrument, trader4.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument], Watch_List,1)
+                correlation_matrix(mm, trader1, trader2, [trader3.instrument, trader4.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument], Watch_List, 1)
             # Pair 2
             if (trader3.correlation == 0 and trader3.replacement == trader3.instrument) or (trader4.correlation == 0 and trader4.replacement == trader4.instrument):
-                correlation_matrix(mm, trader3, trader4, [trader2.instrument, trader1.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument], Watch_List,1)
+                correlation_matrix(mm, trader3, trader4, [trader2.instrument, trader1.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument], Watch_List, 1)
             # Pair 3
             if (trader5.correlation == 0 and trader5.replacement == trader5.instrument) or (trader6.correlation == 0 and trader6.replacement == trader6.instrument):
-                correlation_matrix(mm, trader5, trader6, [trader7.instrument, trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument], Watch_List,1)
+                correlation_matrix(mm, trader5, trader6, [trader7.instrument, trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument], Watch_List, 1)
             # Pair 4
             if (trader7.correlation == 0 and trader7.replacement == trader7.instrument) or (trader8.correlation == 0 and trader8.replacement == trader8.instrument):
-                correlation_matrix(mm, trader7, trader8, [trader5.instrument, trader6.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument], Watch_List,1)
+                correlation_matrix(mm, trader7, trader8, [trader5.instrument, trader6.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument], Watch_List, 1)
 
             # propagate counterpart info
             trader1.place_info(trader2); trader2.place_info(trader1)
@@ -927,6 +927,7 @@ if __name__ == "__main__":
             print(mt5.last_error())
 
     sys.exit(0)
+
 
 
 
