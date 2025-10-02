@@ -93,6 +93,7 @@ Watch_List = ['AUDJPY.pro', 'EURJPY.pro','GBPJPY.pro', 'CHFJPY.pro',
               'USDCAD.pro','NZDUSD.pro']
 
 #Use other Watchlists for other markets (like stock market for ex)
+# dont forget to add watchlist to all_symbol in main function
 
 trader1_instrument='EURJPY.pro'
 trader2_instrument='USDJPY.pro'
