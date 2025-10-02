@@ -86,11 +86,13 @@ time_check_double = 5.0
 # Time to wait to check neutral position
 time_check_position = 1.0
 
-# US and Japanese market
+# Forex Market
 Watch_List = ['AUDJPY.pro', 'EURJPY.pro','GBPJPY.pro', 'CHFJPY.pro',
               'USDJPY.pro','CADJPY.pro','NZDJPY.pro','AUDUSD.pro', 
               'EURUSD.pro','GBPUSD.pro', 'USDCHF.pro',
               'USDCAD.pro','NZDUSD.pro']
+
+#Use other Watchlists for other markets (like stock market for ex)
 
 trader1_instrument='EURJPY.pro'
 trader2_instrument='USDJPY.pro'
@@ -692,18 +694,8 @@ class ConTrader:
         # adjust decimals/pips when switching
         if self.position==0 and ((self.correlation==0) or (self.emergency==1)) and (self.replacement!=self.instrument) :
             temp = self.replacement
-            if temp in ['USDJPY.pro','EURJPY.pro','AUDJPY.pro']:
-                self.instrument = temp; self.decimal = 3; self.pip = 0.001
-            elif temp in ['NZDJPY.pro','GBPJPY.pro','CADJPY.pro']:
-                self.instrument = temp; self.decimal = 3; self.pip = 0.002
-            elif temp in ['CHFJPY.pro']:
-                self.instrument = temp; self.decimal = 3; self.pip = 0.0025
-            elif temp in ['EURCAD.pro']:
-                self.instrument = temp; self.decimal = 5; self.pip = 0.000025
-            elif temp in ['EURGBP.pro','EURCHF.pro']:
-                self.instrument = temp; self.decimal = 5; self.pip = 0.000015
-            else:
-                self.instrument = temp; self.decimal = 5; self.pip = 0.00001
+            self.instrument = temp
+            self._set_pip_decimal(self.instrument)
             self.replaced = 1
             self.raw_data_b = None
             self._last_corr_check  = 0.0
