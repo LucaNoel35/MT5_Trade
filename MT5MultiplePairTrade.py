@@ -93,6 +93,7 @@ Watch_List = ['AUDJPY.pro', 'EURJPY.pro','GBPJPY.pro', 'CHFJPY.pro',
               'USDCAD.pro','NZDUSD.pro']
 
 # create other watchlists for other Market (for exemple, stock market)
+# dont forget to add watchlist to all_symbol in main function
 
 trader1_instrument='EURJPY.pro'
 trader2_instrument='USDJPY.pro'
@@ -928,6 +929,7 @@ if __name__ == "__main__":
             print(mt5.last_error())
 
     sys.exit(0)
+
 
 
 
