@@ -202,7 +202,7 @@ class MarketManager:
 
 class ConTrader:
     def __init__(self, mm: MarketManager, instrument, pip, decimal, strat, strat_close, gain, loss, space,
-                 instrument_b, pourcentage, hedge, initialize, first_run, safe, inverse):
+                 instrument_b, pourcentage, hedge, first_run, safe, inverse):
         self.mm = mm
         self.instrument = instrument
         self.instrument_b = instrument_b
@@ -232,7 +232,7 @@ class ConTrader:
         self.position_b = 0
         self.hedge = hedge
         self.hedge_b = hedge
-        self.initialize = initialize
+        self.initialize = 1
         self.initialize_origin = initialize
         self.beginning = 1
         self.beginning_origin = self.beginning
@@ -606,8 +606,8 @@ class ConTrader:
             can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and self.correlation == 1 and self.emergency == 0 and self.double_instrument==0 and (not self.quota) and ((self.count > time_check_position and self.beginning != 1) or self.beginning == 1) and self.instrument!=self.instrument_b and self.position==0)
             if can_trade:
                 # sell setup
-                cond_sell = (((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position)) and (self.avg_space == 1 or apply_spread_avg == 0) and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1) or (self.first_run==-1 and self.position_b == 0)
-                cond_buy = (((self.config == 1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == -1 and self.previous_position == self.latest_seen_position)) and (self.avg_space == 1 or apply_spread_avg == 0) and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == -1) or (self.first_run==1 and self.position_b == 0)
+                cond_sell = (((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1) or (self.first_run==-1 and self.position_b == 0)
+                cond_buy = (((self.config == 1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == -1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == -1) or (self.first_run==1 and self.position_b == 0)
                 far_enough = (abs(self.close - self.price) > self.space*val) or (self.initialize == 1)
                 if cond_sell and far_enough:
                     self.sell_order(self.units)
@@ -831,15 +831,15 @@ if __name__ == "__main__":
     mm.pull_ticks(); mm.pull_positions(); mm.pull_rates()
 
     # Instantiate traders
-    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader2_instrument,0.02,-1,1,1,-1,-1)
-    trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1, gain_plus , loss_plus,0, trader1_instrument,0.02, 1,1, -1,-1,-1)
-    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader4_instrument,0.02,-1,1, -1,-1,-1)
-    trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1, gain_plus, loss_plus,0, trader3_instrument,0.02, 1,1,1,-1,-1)
+    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader2_instrument,0.02,-1,1,-1,-1)
+    trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1, gain_plus , loss_plus,0, trader1_instrument,0.02, 1, -1,-1,-1)
+    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader4_instrument,0.02,-1, -1,-1,-1)
+    trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1, gain_plus, loss_plus,0, trader3_instrument,0.02, 1,1,-1,-1)
 
-    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader6_instrument,0.02, 1,1,1,-1,-1)
-    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus,0, trader5_instrument,0.02,-1,1, -1,-1,-1)
-    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader8_instrument,0.02, 1,1, -1,-1,-1)
-    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus ,0, trader7_instrument,0.02,-1,1,1,-1,-1)
+    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader6_instrument,0.02, 1,1,-1,-1)
+    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus,0, trader5_instrument,0.02,-1, -1,-1,-1)
+    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader8_instrument,0.02, 1, -1,-1,-1)
+    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus ,0, trader7_instrument,0.02,-1,1,-1,-1)
 
     traders = [trader1,trader2,trader3,trader4,trader5,trader6,trader7,trader8]
 
