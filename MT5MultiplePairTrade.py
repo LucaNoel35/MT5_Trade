@@ -58,9 +58,9 @@ correlation_inverse=1
 high_correlation_value = 0.75
 low_correlation_value = high_correlation_value/3
 
-selection_condition_buy_sell=-1
+selection_condition_buy_sell=1
 
-selection_gain_loss=1
+selection_gain_loss=2
 
 gain_plus=2
 loss_plus=1
@@ -90,7 +90,7 @@ Watch_List = ['AUDJPY.pro', 'EURJPY.pro','GBPJPY.pro', 'CHFJPY.pro',
               'EURUSD.pro','GBPUSD.pro', 'USDCHF.pro',
               'USDCAD.pro','NZDUSD.pro']
 
-# create other watchlists for other Market (for exemple, stock market)
+#Use other Watchlists for other markets (like stock market for ex)
 # dont forget to add watchlist to all_symbol in main function
 
 trader1_instrument='EURJPY.pro'
@@ -98,6 +98,7 @@ trader2_instrument='USDJPY.pro'
 trader3_instrument='CADJPY.pro'
 trader4_instrument='AUDJPY.pro'
 
+# Add more if needed (watch list 2)
 trader5_instrument='EURUSD.pro'
 trader6_instrument='GBPUSD.pro'
 trader7_instrument='AUDUSD.pro'
@@ -201,7 +202,7 @@ class MarketManager:
 
 class ConTrader:
     def __init__(self, mm: MarketManager, instrument, pip, decimal, strat, strat_close, gain, loss, space,
-                 instrument_b, pourcentage, hedge, initialize, first_run, safe, inverse):
+                 instrument_b, pourcentage, hedge, first_run, safe, inverse):
         self.mm = mm
         self.instrument = instrument
         self.instrument_b = instrument_b
@@ -231,7 +232,7 @@ class ConTrader:
         self.position_b = 0
         self.hedge = hedge
         self.hedge_b = hedge
-        self.initialize = initialize
+        self.initialize = 1
         self.initialize_origin = initialize
         self.beginning = 1
         self.beginning_origin = self.beginning
@@ -605,8 +606,8 @@ class ConTrader:
             can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and self.correlation == 1 and self.emergency == 0 and self.double_instrument==0 and (not self.quota) and ((self.count > time_check_position and self.beginning != 1) or self.beginning == 1) and self.instrument!=self.instrument_b and self.position==0)
             if can_trade:
                 # sell setup
-                cond_sell = (((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position)) and (self.avg_space == 1 or apply_spread_avg == 0) and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1) or (self.first_run==-1 and self.position_b == 0)
-                cond_buy = (((self.config == 1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == -1 and self.previous_position == self.latest_seen_position)) and (self.avg_space == 1 or apply_spread_avg == 0) and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == -1) or (self.first_run==1 and self.position_b == 0)
+                cond_sell = (((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1) or (self.first_run==-1 and self.position_b == 0)
+                cond_buy = (((self.config == 1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == -1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == -1) or (self.first_run==1 and self.position_b == 0)
                 far_enough = (abs(self.close - self.price) > self.space*val) or (self.initialize == 1)
                 if cond_sell and far_enough:
                     self.sell_order(self.units)
@@ -660,7 +661,7 @@ class ConTrader:
         self.beginning=self.beginning_origin      
         self.initialize=self.initialize_origin
         self.first_run=self.first_run_origin
-        self.double_instrument=1      
+        self.double_instrument=1
 
     def close_position(self, positions):
         if not positions:
@@ -830,15 +831,15 @@ if __name__ == "__main__":
     mm.pull_ticks(); mm.pull_positions(); mm.pull_rates()
 
     # Instantiate traders
-    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader2_instrument,0.02,-1,1,1,-1,-1)
-    trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1, gain_plus , loss_plus,0, trader1_instrument,0.02, 1,1, -1,-1,-1)
-    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader4_instrument,0.02,-1,1, -1,-1,-1)
-    trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1, gain_plus, loss_plus,0, trader3_instrument,0.02, 1,1,1,-1,-1)
+    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader2_instrument,0.02,-1,1,-1,-1)
+    trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1, gain_plus , loss_plus,0, trader1_instrument,0.02, 1, -1,-1,-1)
+    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader4_instrument,0.02,-1, -1,-1,-1)
+    trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1, gain_plus, loss_plus,0, trader3_instrument,0.02, 1,1,-1,-1)
 
-    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader6_instrument,0.02, 1,1,1,-1,-1)
-    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus,0, trader5_instrument,0.02,-1,1, -1,-1,-1)
-    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader8_instrument,0.02, 1,1, -1,-1,-1)
-    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus ,0, trader7_instrument,0.02,-1,1,1,-1,-1)
+    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader6_instrument,0.02, 1,1,-1,-1)
+    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus,0, trader5_instrument,0.02,-1, -1,-1,-1)
+    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader8_instrument,0.02, 1, -1,-1,-1)
+    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus ,0, trader7_instrument,0.02,-1,1,-1,-1)
 
     traders = [trader1,trader2,trader3,trader4,trader5,trader6,trader7,trader8]
 
@@ -867,7 +868,7 @@ if __name__ == "__main__":
             for t in traders:
                 t.reset()
                 time.sleep(5.0)
-            #break
+            break
         
                 
 
@@ -927,11 +928,3 @@ if __name__ == "__main__":
             print(mt5.last_error())
 
     sys.exit(0)
-
-
-
-
-
-
-
-
