@@ -62,22 +62,10 @@ selection_condition_buy_sell=1
 
 selection_gain_loss=1
 
-gain_plus=2
-loss_plus=1
-gain_minus=2
-loss_minus=1
-
-safe_plus=-1
-safe_minus=-1
-
-inverse_plus=-1
-inverse_minus=-1
-
-correlation_12=1
-correlation_34=1
-correlation_56=1
-correlation_78=1
-
+gain_plus=1
+loss_plus=2
+gain_minus=1
+loss_minus=2
 
 if selection_gain_loss==1:
   gain_plus=2
@@ -89,7 +77,17 @@ elif selection_gain_loss==2:
   loss_plus=1
   gain_minus=1
   loss_minus=2
+  
+safe_plus=-1
+safe_minus=-1
 
+inverse_plus=-1
+inverse_minus=-1
+
+correlation_12=1
+correlation_34=1
+correlation_56=1
+correlation_78=1
 # Time to wait to check double instrument in s
 time_check_double = 5.0
 
