@@ -244,7 +244,7 @@ class ConTrader:
         self.hedge = hedge
         self.hedge_b = hedge
         self.initialize = 1
-        self.initialize_origin = initialize
+        self.initialize_origin = self.initialize
         self.beginning = 1
         self.beginning_origin = self.beginning
 
