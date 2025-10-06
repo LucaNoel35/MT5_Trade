@@ -58,9 +58,9 @@ correlation_inverse=1
 high_correlation_value = 0.75
 low_correlation_value = high_correlation_value/3
 
-selection_condition_buy_sell=1
+selection_condition_buy_sell=0
 
-selection_gain_loss=1
+selection_gain_loss=2
 
 gain_plus=1
 loss_plus=2
