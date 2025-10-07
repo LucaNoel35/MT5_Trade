@@ -84,10 +84,10 @@ safe_minus=-1
 inverse_plus=-1
 inverse_minus=-1
 
-correlation_per_name_12=1
-correlation_per_name_34=1
-correlation_per_name_56=1
-correlation_per_name_78=1
+correlation_per_name_12=0
+correlation_per_name_34=0
+correlation_per_name_56=0
+correlation_per_name_78=0
 
 # Time to wait to check double instrument in s
 time_check_double = 5.0
