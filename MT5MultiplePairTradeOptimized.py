@@ -54,13 +54,13 @@ correlation_multiplier = 4
 correlation_divider = 2
 
 #correlation inversed (-1) means high risk high reward, and vice versa
-correlation_inverse=1
+correlation_inverse=-1
 high_correlation_value = 0.75
 low_correlation_value = high_correlation_value/3
 
-selection_condition_buy_sell=0
+selection_condition_buy_sell=1
 
-selection_gain_loss=2
+selection_gain_loss=1
 
 gain_plus=1
 loss_plus=2
