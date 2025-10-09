@@ -77,6 +77,12 @@ elif selection_gain_loss==2:
   loss_plus=1
   gain_minus=1
   loss_minus=2
+elif selection_gain_loss==3:
+  gain_plus=1.5
+  loss_plus=1
+  gain_minus=2
+  loss_minus=1.5
+
 
 safe_plus=-1
 safe_minus=-1
@@ -939,6 +945,7 @@ if __name__ == "__main__":
             print(mt5.last_error())
 
     sys.exit(0)
+
 
 
 
