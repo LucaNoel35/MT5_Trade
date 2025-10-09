@@ -73,10 +73,10 @@ if selection_gain_loss==1:
   gain_minus=1.5
   loss_minus=1.5
 elif selection_gain_loss==2:
-  gain_plus=1.5
+  gain_plus=2
   loss_plus=1
   gain_minus=1
-  loss_minus=2
+  loss_minus=1.5
   
 safe_plus=-1
 safe_minus=-1
