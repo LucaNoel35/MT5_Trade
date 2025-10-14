@@ -26,7 +26,7 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre =  62219880              
+nombre =  62428385            
 pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
@@ -43,6 +43,8 @@ base_currency = 'EUR'
 add_spread = 1
 apply_quota = 0
 apply_spread_avg = 0
+quota_gain=0.02
+
 
 global_leverage = 16
 value_spread_multiplier = 10
@@ -54,13 +56,13 @@ correlation_multiplier = 4
 correlation_divider = 2
 
 #correlation inversed (-1) means high risk high reward, and vice versa
-correlation_inverse=-1
+correlation_inverse=1
 high_correlation_value = 0.75
 low_correlation_value = high_correlation_value/3
 
 selection_condition_buy_sell=1
 
-selection_gain_loss=0
+selection_gain_loss=1
 
 gain_plus=2
 loss_plus=1
@@ -74,14 +76,14 @@ if selection_gain_loss==1:
   loss_minus=1.5
 elif selection_gain_loss==2:
   gain_plus=2
-  loss_plus=1
+  loss_plus=2
   gain_minus=1
-  loss_minus=1.5
+  loss_minus=1
 elif selection_gain_loss==3:
   gain_plus=1.5
   loss_plus=1
-  gain_minus=2
-  loss_minus=1.5
+  gain_minus=1
+  loss_minus=2
 
 
 safe_plus=-1
@@ -848,15 +850,15 @@ if __name__ == "__main__":
     mm.pull_ticks(); mm.pull_positions(); mm.pull_rates()
 
     # Instantiate traders
-    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader2_instrument,0.02,-1,1,safe_minus,inverse_minus)
-    trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1, gain_plus , loss_plus,0, trader1_instrument,0.02, 1, -1,safe_plus,inverse_plus)
-    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader4_instrument,0.02,-1, -1,safe_minus,inverse_minus)
-    trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1, gain_plus, loss_plus,0, trader3_instrument,0.02, 1,1,safe_plus,inverse_plus)
+    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader2_instrument,quota_gain,-1,1,safe_minus,inverse_minus)
+    trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1, gain_plus , loss_plus,0, trader1_instrument,quota_gain, 1, -1,safe_plus,inverse_plus)
+    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader4_instrument,quota_gain,-1, -1,safe_minus,inverse_minus)
+    trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1, gain_plus, loss_plus,0, trader3_instrument,quota_gain, 1,1,safe_plus,inverse_plus)
 
-    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader6_instrument,0.02, 1,1,safe_minus,inverse_minus)
-    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus,0, trader5_instrument,0.02,-1, -1,safe_plus,inverse_plus)
-    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader8_instrument,0.02, 1, -1,safe_minus,inverse_minus)
-    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus ,0, trader7_instrument,0.02,-1,1,safe_plus,inverse_plus)
+    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader6_instrument,quota_gain, 1,1,safe_minus,inverse_minus)
+    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus,0, trader5_instrument,quota_gain,-1, -1,safe_plus,inverse_plus)
+    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader8_instrument,quota_gain, 1, -1,safe_minus,inverse_minus)
+    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus ,0, trader7_instrument,quota_gain,-1,1,safe_plus,inverse_plus)
 
     traders = [trader1,trader2,trader3,trader4,trader5,trader6,trader7,trader8]
 
@@ -945,10 +947,3 @@ if __name__ == "__main__":
             print(mt5.last_error())
 
     sys.exit(0)
-
-
-
-
-
-
-
