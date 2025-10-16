@@ -56,7 +56,7 @@ correlation_multiplier = 4
 correlation_divider = 2
 
 #correlation inversed (-1) means high risk high reward, and vice versa
-correlation_inverse=1
+correlation_inverse=-1
 high_correlation_value = 0.75
 low_correlation_value = high_correlation_value/3
 
@@ -92,10 +92,10 @@ safe_minus=-1
 inverse_plus=-1
 inverse_minus=-1
 
-correlation_per_name_12=1
-correlation_per_name_34=1
-correlation_per_name_56=1
-correlation_per_name_78=1
+correlation_per_name_12=0
+correlation_per_name_34=0
+correlation_per_name_56=0
+correlation_per_name_78=0
 
 # Time to wait to check double instrument in s
 time_check_double = 5.0
