@@ -75,14 +75,14 @@ if selection_gain_loss==1:
   gain_minus=1.5
   loss_minus=1.5
 elif selection_gain_loss==2:
-  gain_plus=2
-  loss_plus=2
-  gain_minus=1
-  loss_minus=1
-elif selection_gain_loss==3:
   gain_plus=1.5
   loss_plus=1
   gain_minus=1
+  loss_minus=2
+elif selection_gain_loss==3:
+  gain_plus=1.5
+  loss_plus=1
+  gain_minus=1.5
   loss_minus=2
 
 
