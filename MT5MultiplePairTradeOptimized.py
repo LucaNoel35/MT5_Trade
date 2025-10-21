@@ -26,7 +26,7 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre =  62463551            
+nombre =  62558330
 pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
@@ -62,18 +62,18 @@ low_correlation_value = high_correlation_value/3
 
 selection_condition_buy_sell=1
 
-selection_gain_loss=0
+selection_gain_loss=2
 
-gain_plus=1
-loss_plus=2
-gain_minus=1
-loss_minus=2
+gain_plus=2
+loss_plus=1
+gain_minus=2
+loss_minus=1
 
 if selection_gain_loss==1:
   gain_plus=2
   loss_plus=1
-  gain_minus=1.5
-  loss_minus=1.5
+  gain_minus=1
+  loss_minus=1
 elif selection_gain_loss==2:
   gain_plus=1.5
   loss_plus=1
@@ -86,11 +86,11 @@ elif selection_gain_loss==3:
   loss_minus=1.5
 
 
-safe_plus=-1
+safe_plus=1
 safe_minus=-1
 
 inverse_plus=1
-inverse_minus=1
+inverse_minus=0
 
 correlation_per_name_12=1
 correlation_per_name_34=1
@@ -104,10 +104,10 @@ time_check_double = 5.0
 time_check_position = 1.0
 
 # Forex Market
-Watch_List = ['AUDJPY.pro', 'EURJPY.pro','GBPJPY.pro', 'CHFJPY.pro',
-              'USDJPY.pro','CADJPY.pro','NZDJPY.pro','AUDUSD.pro', 
-              'EURUSD.pro','GBPUSD.pro', 'USDCHF.pro',
-              'USDCAD.pro','NZDUSD.pro']
+Watch_List = ['AUDJPY.pro','EURUSD.pro', 'EURJPY.pro''GBPUSD.pro',
+                'USDJPY.pro', 'USDCHF.pro','GBPJPY.pro',
+                'AUDUSD.pro','CADJPY.pro','USDCAD.pro', 'CHFJPY.pro',
+              'NZDUSD.pro','NZDJPY.pro']
 
 #Use other Watchlists for other markets (like stock market for ex)
 # dont forget to add watchlist to all_symbol in main function
