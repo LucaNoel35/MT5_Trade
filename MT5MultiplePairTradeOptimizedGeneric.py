@@ -5,7 +5,6 @@ Optimized MT5 multi-pair trading bot
 - Centralized rates cache with smart throttling (only refresh when a new bar appears)
 - Single scheduler loop (no per-trader busy threads)
 - Traders read-only views over caches; only order_send makes API calls
-- Fewer MT5 calls in order/close flows (reuse cached ticks/prices)
 - Correlation checks throttled
 
 NOTE: Credentials are left as variables. Consider securing them via env vars.
@@ -27,9 +26,9 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre = 88974476
-pwd = '!lPrKj8z'
-server_name = 'FOREXer-Server'
+nombre =  62025733
+pwd = 'Sephiroth35*'
+server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 
 number_of_instrument = 8
@@ -44,6 +43,8 @@ base_currency = 'EUR'
 add_spread = 1
 apply_quota = 0
 apply_spread_avg = 0
+quota_gain=0.02
+
 
 global_leverage = 16
 value_spread_multiplier = 10
@@ -54,26 +55,73 @@ correlation_number = 60
 correlation_multiplier = 4
 correlation_divider = 2
 
+#correlation inversed (-1) means high risk high reward, and vice versa
+correlation_inverse=1
 high_correlation_value = 0.75
-low_correlation_value = high_correlation_value / 3
+low_correlation_value = -high_correlation_value/2
 
-# Japanese market
-Watch_List = ['AUDJPY', 'EURJPY','GBPJPY', 'CHFJPY',
-              'USDJPY','CADJPY','NZDJPY']
-# US market
-Watch_List_2 = ['AUDUSD', 'EURUSD','GBPUSD', 'USDCHF',
-                'USDCAD','NZDUSD']
+selection_condition_buy_sell=1
 
-trader1_instrument='EURJPY'
-trader2_instrument='USDJPY'
-trader3_instrument='CADJPY'
-trader4_instrument='AUDJPY'
+selection_gain_loss=2
+
+gain_plus=2
+loss_plus=1
+gain_minus=2
+loss_minus=1
+
+if selection_gain_loss==1:
+  gain_plus=2
+  loss_plus=1
+  gain_minus=1.5
+  loss_minus=1.5
+elif selection_gain_loss==2:
+  gain_plus=1.5
+  loss_plus=1
+  gain_minus=1
+  loss_minus=2
+elif selection_gain_loss==3:
+  gain_plus=1.5
+  loss_plus=1
+  gain_minus=1.5
+  loss_minus=2
+
+
+safe_plus=1
+safe_minus=-1
+
+inverse_plus=-1
+inverse_minus=1
+
+correlation_per_name_12=1
+correlation_per_name_34=1
+correlation_per_name_56=1
+correlation_per_name_78=1
+
+# Time to wait to check double instrument in s
+time_check_double = 5.0
+
+# Time to wait to check neutral position
+time_check_position = 1.0
+
+# Forex Market
+Watch_List = ['AUDJPY.pro', 'EURJPY.pro','GBPJPY.pro', 'CHFJPY.pro',
+              'USDJPY.pro','CADJPY.pro','NZDJPY.pro','AUDUSD.pro', 
+              'EURUSD.pro','GBPUSD.pro', 'USDCHF.pro',
+              'USDCAD.pro','NZDUSD.pro']
+
+#Use other Watchlists for other markets (like stock market for ex)
+# dont forget to add watchlist to all_symbol in main function
+
+trader1_instrument='EURJPY.pro'
+trader2_instrument='USDJPY.pro'
+trader3_instrument='CADJPY.pro'
+trader4_instrument='AUDJPY.pro'
 
 # Add more if needed (watch list 2)
-trader5_instrument='EURUSD'
-trader6_instrument='GBPUSD'
-trader7_instrument='AUDUSD'
-trader8_instrument='NZDUSD'
+trader5_instrument='EURUSD.pro'
+trader6_instrument='GBPUSD.pro'
+trader7_instrument='AUDUSD.pro'
+trader8_instrument='NZDUSD.pro'
 
 # =========================
 # ==== MARKET MANAGER =====
@@ -173,7 +221,7 @@ class MarketManager:
 
 class ConTrader:
     def __init__(self, mm: MarketManager, instrument, pip, decimal, strat, strat_close, gain, loss, space,
-                 instrument_b, pourcentage, hedge, initialize, beginning, safe, inverse):
+                 instrument_b, pourcentage, hedge, first_run, safe, inverse):
         self.mm = mm
         self.instrument = instrument
         self.instrument_b = instrument_b
@@ -203,10 +251,10 @@ class ConTrader:
         self.position_b = 0
         self.hedge = hedge
         self.hedge_b = hedge
-        self.initialize = initialize
-        self.initialize_origin = initialize
-        self.beginning = beginning
-        self.beginning_origin = beginning
+        self.initialize = 1
+        self.initialize_origin = self.initialize
+        self.beginning = 1
+        self.beginning_origin = self.beginning
 
         self.units = 0.1
         self.initial_units = 0.1
@@ -267,35 +315,80 @@ class ConTrader:
         self._last_corr_check = 0.0
         self.corr_interval_s = 10.0  # check correlation at most every 10s
 
+
+        self.emergency=1
+        self.double_instrument=1
+        self.first_run=first_run
+        self.first_run_origin = first_run
+
+
+
     # ---------- utils ----------
-    def setUnits(self):
-        # Pip/decimal normalization based on instrument
-        if self.instrument in ['USDJPY','EURJPY','AUDJPY']:
-            self.decimal = 3; self.pip = 0.001
-        elif self.instrument in ['NZDJPY','GBPJPY','CADJPY']:
-            self.decimal = 3; self.pip = 0.002
-        elif self.instrument in ['CHFJPY']:
-            self.decimal = 3; self.pip = 0.0025
-        elif self.instrument in ['EURCAD']:
-            self.decimal = 5; self.pip = 0.000025
-        elif self.instrument in ['EURGBP','EURCHF']:
-            self.decimal = 5; self.pip = 0.000015
-        else:
-            self.decimal = 5; self.pip = 0.00001
 
-        positions = mt5.positions_get()
-
-        # close any orphan positions once at startup (use cached positions later)
-        self.close_position(positions)
+    def setUnits(self, watchlist, assigned_symbols=None):
+        if assigned_symbols is None:
+            assigned_symbols = []
 
         account_info = mt5.account_info()
         balance = account_info.balance if account_info else 0
         self.original_balance = balance
+
+        # Liste des symboles possibles pour ce trader
+        possible_symbols = [s for s in watchlist if s not in assigned_symbols]
+
+        # Cherche position existante sur symboles disponibles
+        for s in possible_symbols:
+            positions = self.mm.get_positions(s)
+            if positions:
+                p = positions[0]
+                self.instrument = s
+                self.position = 1 if p.type == mt5.ORDER_TYPE_BUY else -1
+                self.latest_seen_position = self.position
+                self.price = p.price_open
+                self.units = p.volume
+                self.initial_units = self.units
+                self._set_pip_decimal(self.instrument)
+                print(f"{self.instrument} assigned from existing position, lots={self.units}")
+                self.beginning = -1
+                self.first_run=0
+                assigned_symbols.append(self.instrument)
+                return
+
+        # Aucun position existante → assigner premier symbole dispo
+        if possible_symbols:
+            self.instrument = possible_symbols[0]
+        # fallback si plus rien dispo
+        else:
+            self.instrument = self.instrument
+
         hedge_fac = hedge_factor if self.hedge == -1 else 1
-        lots = max(round((math.floor(((balance / 100000)*self.leverage)*100))/100 ,2),0.01)
+        lots = max(round((math.floor(((balance / 100000) * self.leverage) * 100)) / 100, 2), 0.01)
         self.units = round(hedge_fac * lots, 2)
         self.initial_units = self.units
-        print(self.instrument, self.units, "lots")
+        self.position = 0
+        self.latest_seen_position = 0
+        self.price = None
+        self._set_pip_decimal(self.instrument)
+        print(f"{self.instrument} no existing position, lots={self.units}")
+        self.beginning = 1
+        assigned_symbols.append(self.instrument)
+
+    # ---------- Helper pour assigner decimal/pip ----------
+    def _set_pip_decimal(self, instrument):
+        if instrument in ['USDJPY.pro','EURJPY.pro','AUDJPY.pro']:
+            self.decimal = 3; self.pip = 0.001
+        elif instrument in ['NZDJPY.pro','GBPJPY.pro','CADJPY.pro']:
+            self.decimal = 3; self.pip = 0.002
+        elif instrument in ['CHFJPY.pro']:
+            self.decimal = 3; self.pip = 0.0025
+        elif instrument in ['EURCAD.pro']:
+            self.decimal = 5; self.pip = 0.000025
+        elif instrument in ['EURGBP.pro','EURCHF.pro']:
+            self.decimal = 5; self.pip = 0.000015
+        else:
+            self.decimal = 5; self.pip = 0.00001
+
+
 
     def _update_spread(self, tick):
         self.ask = tick.ask
@@ -335,7 +428,7 @@ class ConTrader:
         if now - self._last_corr_check < self.corr_interval_s:
             return
         if self.raw_data is None or self.raw_data_b is None:
-            self.correlation = 1
+            self.correlation = 0
             self._last_corr_check = now
             return
         data = {
@@ -345,16 +438,16 @@ class ConTrader:
         df = pd.DataFrame(data)
         corr_df = df.corr()
         if corr_df.where(corr_df < 1).stack().empty:
-            self.correlation = 1
+            self.correlation = 0
         else:
             max_corr_index = corr_df.where(corr_df < 1).stack().idxmax()
             corr = corr_df.loc[max_corr_index]
-            self.correlation = 1 if corr > low_correlation_value and (self.instrument != self.instrument_b) else 0
+            self.correlation = 1 if corr*correlation_inverse > low_correlation_value*correlation_inverse and (self.instrument != self.instrument_b) else 0
         self._last_corr_check = now
 
     def highly_correlate(self):
         if self.raw_data is None or self.raw_data_b is None:
-            self.correlation = 1
+            self.correlation = 0
             return
         data = {
             self.instrument_b: self.raw_data_b['c'],
@@ -363,11 +456,11 @@ class ConTrader:
         df = pd.DataFrame(data)
         corr_df = df.corr()
         if corr_df.where(corr_df < 1).stack().empty:
-            self.correlation = 1
+            self.correlation = 0
         else:
             max_corr_index = corr_df.where(corr_df < 1).stack().idxmax()
             corr = corr_df.loc[max_corr_index]
-            self.correlation = 1 if corr > high_correlation_value and (self.instrument != self.instrument_b) else 0
+            self.correlation = 1 if corr*correlation_inverse > high_correlation_value*correlation_inverse and (self.instrument != self.instrument_b) else 0
 
     def getEMA(self, df: pd.DataFrame):
         df['EMA_5'] = df['c'].ewm(span=5, min_periods=5).mean()
@@ -474,36 +567,51 @@ class ConTrader:
                 self.close_position(positions)
                 self.price = self.close
                 return
+            
+            if self.double_instrument>time_check_double and self.position!=0 and ((p0.type == 0 and self.objectif_reached_buy(self.price)) or (p0.type != 0 and self.objectif_reached_sell(self.price))):
+                self.close_position(positions)
+                self.price = self.close
+                return       
 
+            if self.beginning==1:
+                self.beginning = -1
+              
+            if self.first_run!=0:
+                self.first_run=0
             # closing logic mirrors original but uses cached values
             if p0.type == 0:  # BUY open
                 cond_ok_spread = ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip) and self.position_b == -1) or self.position_b != -1
-                #cond_ok_buy_b = ((self.instrument_b_obj_reached_sell and self.close*self.inverse >= self.price*self.inverse and ((self.config_b == 1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == -1*self.strat_close and self.strat_close==self.strat_close_b))) or self.close*self.inverse < self.price*self.inverse)
-                cond_ok_buy_b = ((self.config_b == 1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == -1*self.strat_close and self.strat_close==self.strat_close_b)) and((self.instrument_b_obj_reached_sell and self.close*self.inverse >= self.price*self.inverse ) or self.close*self.inverse < self.price*self.inverse)
+                if selection_condition_buy_sell==1:
+                  cond_ok_buy_b = ((self.instrument_b_obj_reached_sell and self.close*self.inverse >= self.price*self.inverse and ((self.config_b == 1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == -1*self.strat_close and self.strat_close==self.strat_close_b))) or self.close*self.inverse < self.price*self.inverse)
+                else:
+                  cond_ok_buy_b = ((self.config_b == 1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == -1*self.strat_close and self.strat_close==self.strat_close_b)) and((self.instrument_b_obj_reached_sell and self.close*self.inverse >= self.price*self.inverse ) or self.close*self.inverse < self.price*self.inverse)
 
                 if cond_ok_spread:
                     if (self.config == 1*self.strat_close and self.objectif_reached_buy(self.price) and cond_ok_buy_b and (self.position_b == -1 and self.safe == -1)):
-                        self.price = self.close; self.count = 0; self.close_position(positions)
+                        self.price = self.close; self.count = 0; self.close_position(positions); 
                         if self.space == 0: self.previous_position = 1
                     elif (self.config == 1*self.strat_close and self.objectif_reached_buy(self.price) and (self.position_b != -1 or self.safe != -1)):
-                        self.price = self.close; self.count = 0; self.close_position(positions)
+                        self.price = self.close; self.count = 0; self.close_position(positions); 
                         if self.space == 0: self.previous_position = 1
                     elif (self.objectif_reached_buy(self.price) and self.correlation == 0 and self.position_b == 0 and self.instrument_b == self.replacement_b):
-                        self.price = self.close; self.count = 0; self.close_position(positions)
+                        self.price = self.close; self.count = 0; self.close_position(positions); 
                         if self.space == 0: self.previous_position = 1
             else:  # SELL open
                 cond_ok_spread = ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip) and self.position_b == 1) or self.position_b != 1
-                #cond_ok_sell_b = ((self.instrument_b_obj_reached_buy and self.close*self.inverse <= self.price*self.inverse and ((self.config_b == -1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == 1*self.strat_close and self.strat_close==self.strat_close_b))) or self.close*self.inverse > self.price*self.inverse)
-                cond_ok_sell_b = ((self.config_b == -1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == 1*self.strat_close and self.strat_close==self.strat_close_b)) and ((self.instrument_b_obj_reached_buy and self.close*self.inverse <= self.price*self.inverse ) or self.close*self.inverse > self.price*self.inverse)
+                if selection_condition_buy_sell==1:
+                  cond_ok_sell_b = ((self.instrument_b_obj_reached_buy and self.close*self.inverse <= self.price*self.inverse and ((self.config_b == -1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == 1*self.strat_close and self.strat_close==self.strat_close_b))) or self.close*self.inverse > self.price*self.inverse)
+                else:
+                  cond_ok_sell_b = ((self.config_b == -1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == 1*self.strat_close and self.strat_close==self.strat_close_b)) and ((self.instrument_b_obj_reached_buy and self.close*self.inverse <= self.price*self.inverse ) or self.close*self.inverse > self.price*self.inverse)
+                  
                 if cond_ok_spread:
                     if (self.config == -1*self.strat_close and self.objectif_reached_sell(self.price)  and cond_ok_sell_b and (self.position_b == 1 and self.safe == -1)):
-                        self.price = self.close; self.count = 0; self.close_position(positions)
+                        self.price = self.close; self.count = 0; self.close_position(positions); 
                         if self.space == 0: self.previous_position = -1
                     elif (self.config == -1*self.strat_close and self.objectif_reached_sell(self.price) and (self.position_b != 1 or self.safe != -1)):
-                        self.price = self.close; self.count = 0; self.close_position(positions)
+                        self.price = self.close; self.count = 0; self.close_position(positions); 
                         if self.space == 0: self.previous_position = -1
                     elif (self.objectif_reached_sell(self.price) and self.correlation == 0 and self.position_b == 0 and self.instrument_b == self.replacement_b):
-                        self.price = self.close; self.count = 0; self.close_position(positions)
+                        self.price = self.close; self.count = 0; self.close_position(positions); 
                         if self.space == 0: self.previous_position = -1
         elif len(positions) ==0 :
             # no open position for this symbol
@@ -511,22 +619,21 @@ class ConTrader:
             timing = not (pd.to_datetime("20:45").time() < now.time() < pd.to_datetime("22:15").time())
             if self.price is None and self.close is not None:
                 self.price = self.close
-            if self.count > 5:
+            if self.count > time_check_position:
                 self.position = 0; self.PL = 0
 
-            can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and self.correlation == 1 and not self.quota and ((self.count > 5 and self.beginning != 1) or self.beginning == 1) and self.instrument!=self.instrument_b and self.position==0)
+            can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and self.correlation == 1 and self.emergency == 0 and self.double_instrument==0 and (not self.quota) and ((self.count > time_check_position and self.beginning != 1) or self.beginning == 1) and self.instrument!=self.instrument_b and self.position==0)
             if can_trade:
                 # sell setup
-                cond_sell = (((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position)) and (self.avg_space == 1 or apply_spread_avg == 0) and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1)
-                cond_buy = (((self.config == 1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == -1 and self.previous_position == self.latest_seen_position)) and (self.avg_space == 1 or apply_spread_avg == 0) and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == -1)
+                cond_sell = (((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1) or (self.first_run==-1 and self.position_b == 0)
+                cond_buy = (((self.config == 1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == -1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == -1) or (self.first_run==1 and self.position_b == 0)
                 far_enough = (abs(self.close - self.price) > self.space*val) or (self.initialize == 1)
-
                 if cond_sell and far_enough:
                     self.sell_order(self.units)
-                    self.price = self.close; self.val = val; self.beginning = -1; self.initialize = -1; self.count = 0
+                    self.price = self.close; self.val = val; self.beginning = -1; self.initialize = -1; self.count = 0; self.first_run=0
                 elif cond_buy and far_enough:
                     self.buy_order(self.units)
-                    self.price = self.close; self.val = val; self.beginning = -1; self.initialize = -1; self.count = 0
+                    self.price = self.close; self.val = val; self.beginning = -1; self.initialize = -1; self.count = 0; self.first_run=0
 
     # ---------- orders ----------
     def sell_order(self, value):
@@ -569,6 +676,12 @@ class ConTrader:
         else:
             print(f"BUY ok {self.instrument}: ret={getattr(result,'retcode',None)}")
 
+    def reset(self):
+        self.beginning=self.beginning_origin      
+        self.initialize=self.initialize_origin
+        self.first_run=self.first_run_origin
+        self.double_instrument=1
+
     def close_position(self, positions):
         if not positions:
             return
@@ -597,22 +710,12 @@ class ConTrader:
     # ---------- pairing & maintenance ----------
     def replace_instrument(self):
         # adjust decimals/pips when switching
-        if self.position==0 and ((self.correlation==0) or (self.instrument==self.instrument_b)) and (self.replacement!=self.instrument) :
-            temp = self.replacement
-            if temp in ['USDJPY','EURJPY','AUDJPY']:
-                self.instrument = temp; self.decimal = 3; self.pip = 0.001
-            elif temp in ['NZDJPY','GBPJPY','CADJPY']:
-                self.instrument = temp; self.decimal = 3; self.pip = 0.002
-            elif temp in ['CHFJPY']:
-                self.instrument = temp; self.decimal = 3; self.pip = 0.0025
-            elif temp in ['EURCAD']:
-                self.instrument = temp; self.decimal = 5; self.pip = 0.000025
-            elif temp in ['EURGBP','EURCHF']:
-                self.instrument = temp; self.decimal = 5; self.pip = 0.000015
-            else:
-                self.instrument = temp; self.decimal = 5; self.pip = 0.00001
+        if self.position==0 and ((self.correlation==0) or (self.emergency==1)) and (self.replacement!=self.instrument) :
+            self.instrument = self.replacement
+            self._set_pip_decimal(self.instrument)
             self.replaced = 1
             self.raw_data_b = None
+            self._last_corr_check  = 0.0
             if self.replacement_b != self.instrument_b:
                 self.instrument_b = self.replacement_b
 
@@ -643,11 +746,23 @@ class ConTrader:
             self.replacement_b = trader_b.instrument
 
     def emergency_change_instrument(self, Watchlist, ls):
-        if (self.instrument in ls) and self.position == 0:
+        if (self.instrument in ls) :
+            self.emergency=1
+            self.double_instrument+=1
             temp = random.choice(Watchlist)
             if temp not in ls:
                 self.replacement = temp
                 self.replace_instrument()
+        elif (self.instrument==self.instrument_b) or (self.instrument not in Watchlist ) or (self.instrument_b not in Watchlist ):
+            self.emergency=1
+            temp = random.choice(Watchlist)
+            if temp not in ls:
+                self.replacement = temp
+                self.replace_instrument()
+        else:
+            self.emergency=0
+            self.double_instrument=0
+
 
     def random_change_instrument(self, Watchlist, ls):
         if self.position == 0:
@@ -661,7 +776,7 @@ class ConTrader:
 # ===== CORRELATION =======
 # =========================
 
-def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader, ls, watchlist):
+def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader, ls, watchlist, corr_by_name):
     """Compute correlation only once centrally using cached bars; minimize MT5 calls."""
     data = {}
     for symbol in watchlist:
@@ -678,19 +793,38 @@ def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader
     corr = df_all.corr()
 
     # mask invalid pairs
-    for i in corr.index:
-        for j in corr.columns:
-            if ((i[-7:] != j[-7:] and i[:3] != j[:3])) or (i in ls or j in ls):
-                corr.at[i, j] = np.nan
+    if corr_by_name==1:
+        if correlation_inverse==1:
+            for i in corr.index:
+                for j in corr.columns:
+                    if ((i[-7:] != j[-7:] and i[:3] != j[:3])) or (i in ls or j in ls):
+                        corr.at[i, j] = np.nan
 
-    if trader1.position == 0 and trader2.position == 0:
-        max_corr_index = corr.where(corr < 1).stack().idxmax()
-    elif trader1.position != 0 and trader2.position == 0:
-        max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmax())
-    elif trader1.position == 0 and trader2.position != 0:
-        max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmax(), trader2.instrument)
+        else:
+            for i in corr.index:
+                for j in corr.columns:
+                    if ((i[-7:] == j[-7:] or i[:3] == j[:3])) or (i in ls or j in ls):
+                        corr.at[i, j] = np.nan    
+    
+                
+    if correlation_inverse==1:
+        if trader1.position == 0 and trader2.position == 0:
+            max_corr_index = corr.where(corr < 1).stack().idxmax()
+        elif trader1.position != 0 and trader2.position == 0:
+            max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmax())
+        elif trader1.position == 0 and trader2.position != 0:
+            max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmax(), trader2.instrument)
+        else:
+            max_corr_index = corr.where(corr < 1).stack().idxmax()
     else:
-        max_corr_index = corr.where(corr < 1).stack().idxmax()
+        if trader1.position == 0 and trader2.position == 0:
+            max_corr_index = corr.where(corr < 1).stack().idxmin()
+        elif trader1.position != 0 and trader2.position == 0:
+            max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmin())
+        elif trader1.position == 0 and trader2.position != 0:
+            max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmin(), trader2.instrument)
+        else:
+            max_corr_index = corr.where(corr < 1).stack().idxmin()
 
     trader1.replace(max_corr_index[0], max_corr_index[1], ls)
     trader2.replace(max_corr_index[1], max_corr_index[0], ls)
@@ -705,7 +839,7 @@ if __name__ == "__main__":
         print("initialize() failed")
         sys.exit(1)
 
-    all_symbols = sorted(set(Watch_List + Watch_List_2 + [
+    all_symbols = sorted(set(Watch_List + [
         trader1_instrument, trader2_instrument, trader3_instrument, trader4_instrument,
         trader5_instrument, trader6_instrument, trader7_instrument, trader8_instrument
     ]))
@@ -716,20 +850,21 @@ if __name__ == "__main__":
     mm.pull_ticks(); mm.pull_positions(); mm.pull_rates()
 
     # Instantiate traders
-    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, 1,  2,0, trader2_instrument,0.02,-1,1,-1,-1,-1)
-    trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1, 1.5, 1,0, trader1_instrument,0.02, 1,1, 1,-1,-1)
-    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, 1,  2,0, trader4_instrument,0.02,-1,1, 1,-1,-1)
-    trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1, 1.5, 1,0, trader3_instrument,0.02, 1,1,-1,-1,-1)
+    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader2_instrument,quota_gain,-1,1,safe_minus,inverse_minus)
+    trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1, gain_plus , loss_plus,0, trader1_instrument,quota_gain, 1, -1,safe_plus,inverse_plus)
+    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader4_instrument,quota_gain,-1, -1,safe_minus,inverse_minus)
+    trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1, gain_plus, loss_plus,0, trader3_instrument,quota_gain, 1,1,safe_plus,inverse_plus)
 
-    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, 1,  2,0, trader6_instrument,0.02, 1,1,-1,-1,-1)
-    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1, 1.5, 1,0, trader5_instrument,0.02,-1,1, 1,-1,-1)
-    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, 1,  2,0, trader8_instrument,0.02, 1,1, 1,-1,-1)
-    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1, 1.5, 1,0, trader7_instrument,0.02,-1,1,-1,-1,-1)
+    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader6_instrument,quota_gain, 1,1,safe_minus,inverse_minus)
+    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus,0, trader5_instrument,quota_gain,-1, -1,safe_plus,inverse_plus)
+    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader8_instrument,quota_gain, 1, -1,safe_minus,inverse_minus)
+    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus ,0, trader7_instrument,quota_gain,-1,1,safe_plus,inverse_plus)
 
     traders = [trader1,trader2,trader3,trader4,trader5,trader6,trader7,trader8]
 
+    assigned_symbols = []
     for t in traders:
-        t.setUnits()
+        t.setUnits(Watch_List,assigned_symbols)
 
     # Prime correlation state with preloaded bars
     for t in traders:
@@ -747,10 +882,14 @@ if __name__ == "__main__":
         now = datetime.now(timezone.utc)
         
         # stop conditions (same as original, but more compact)
+        
         if pd.to_datetime("21:00").time() < now.time() < pd.to_datetime("22:00").time():
+            for t in traders:
+                t.reset()
+                time.sleep(5.0)
             break
         
-        
+                
 
         # keep MT5 session alive / re-init if needed
         if mt5.last_error()[0] != 1:
@@ -765,16 +904,16 @@ if __name__ == "__main__":
             # correlation maintenance (throttled via trader.corr_interval_s)
             # Pair 1
             if (trader1.correlation == 0 and trader1.replacement == trader1.instrument) or (trader2.correlation == 0 and trader2.replacement == trader2.instrument):
-                correlation_matrix(mm, trader1, trader2, [trader3.instrument, trader4.instrument], Watch_List)
+                correlation_matrix(mm, trader1, trader2, [trader3.instrument, trader4.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument], Watch_List, correlation_per_name_12)
             # Pair 2
             if (trader3.correlation == 0 and trader3.replacement == trader3.instrument) or (trader4.correlation == 0 and trader4.replacement == trader4.instrument):
-                correlation_matrix(mm, trader3, trader4, [trader2.instrument, trader1.instrument], Watch_List)
+                correlation_matrix(mm, trader3, trader4, [trader2.instrument, trader1.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument], Watch_List, correlation_per_name_34)
             # Pair 3
             if (trader5.correlation == 0 and trader5.replacement == trader5.instrument) or (trader6.correlation == 0 and trader6.replacement == trader6.instrument):
-                correlation_matrix(mm, trader5, trader6, [trader7.instrument, trader8.instrument], Watch_List_2)
+                correlation_matrix(mm, trader5, trader6, [trader7.instrument, trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument], Watch_List, correlation_per_name_56)
             # Pair 4
             if (trader7.correlation == 0 and trader7.replacement == trader7.instrument) or (trader8.correlation == 0 and trader8.replacement == trader8.instrument):
-                correlation_matrix(mm, trader7, trader8, [trader5.instrument, trader6.instrument], Watch_List_2)
+                correlation_matrix(mm, trader7, trader8, [trader5.instrument, trader6.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument], Watch_List, correlation_per_name_78)
 
             # propagate counterpart info
             trader1.place_info(trader2); trader2.place_info(trader1)
@@ -783,26 +922,26 @@ if __name__ == "__main__":
             trader7.place_info(trader8); trader8.place_info(trader7)
 
             # emergency changes (use watchlists)
-            trader1.emergency_change_instrument(Watch_List,[trader2.instrument,trader3.instrument,trader4.instrument,trader1.instrument_b])
-            trader2.emergency_change_instrument(Watch_List,[trader1.instrument,trader3.instrument,trader4.instrument,trader2.instrument_b])
-            trader3.emergency_change_instrument(Watch_List,[trader2.instrument,trader1.instrument,trader4.instrument,trader3.instrument_b])
-            trader4.emergency_change_instrument(Watch_List,[trader3.instrument,trader2.instrument,trader1.instrument,trader4.instrument_b])
+            trader1.emergency_change_instrument(Watch_List,[trader2.instrument,trader3.instrument,trader4.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument])
+            trader2.emergency_change_instrument(Watch_List,[trader1.instrument,trader3.instrument,trader4.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument])
+            trader3.emergency_change_instrument(Watch_List,[trader2.instrument,trader1.instrument,trader4.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument])
+            trader4.emergency_change_instrument(Watch_List,[trader3.instrument,trader2.instrument,trader1.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument])
 
-            trader5.emergency_change_instrument(Watch_List_2,[trader6.instrument,trader7.instrument,trader8.instrument,trader5.instrument_b])
-            trader6.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader7.instrument,trader8.instrument,trader6.instrument_b])
-            trader7.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader6.instrument,trader8.instrument,trader7.instrument_b])
-            trader8.emergency_change_instrument(Watch_List_2,[trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument_b])
-
-            # allow instrument replacement when safe
-            for t in traders:
-                t.replace_instrument()
+            trader5.emergency_change_instrument(Watch_List,[trader6.instrument,trader7.instrument,trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
+            trader6.emergency_change_instrument(Watch_List,[trader5.instrument,trader7.instrument,trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
+            trader7.emergency_change_instrument(Watch_List,[trader5.instrument,trader6.instrument,trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
+            trader8.emergency_change_instrument(Watch_List,[trader5.instrument,trader6.instrument,trader7.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
 
             # execute decisions
             for t in traders:
                 t.execute_trades()
 
-            # pace with timeframe; 0.1s is enough for M1
-            time.sleep(0.1)
+            # allow instrument replacement when safe
+            for t in traders:
+                t.replace_instrument()
+
+            # pace with timeframe; 1s is enough for M1
+            time.sleep(1.0)
         except:
             print("Trading not active")
             print(mt5.last_error())
