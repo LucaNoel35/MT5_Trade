@@ -104,7 +104,7 @@ time_check_double = 5.0
 time_check_position = 1.0
 
 # Time to wait to check everything before execution time
-time_check_main = 15.0
+time_check_main = 5.0
 
 # Forex Market
 Watch_List = ['AUDJPY.pro','EURUSD.pro', 'EURJPY.pro''GBPUSD.pro',
