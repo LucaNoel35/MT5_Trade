@@ -26,7 +26,7 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre =  62612147
+nombre =  62243978
 pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
@@ -72,8 +72,8 @@ loss_minus=1
 if selection_gain_loss==1:
   gain_plus=2
   loss_plus=1
-  gain_minus=1.5
-  loss_minus=1.5
+  gain_minus=1
+  loss_minus=1
 elif selection_gain_loss==2:
   gain_plus=1.5
   loss_plus=1
@@ -82,15 +82,15 @@ elif selection_gain_loss==2:
 elif selection_gain_loss==3:
   gain_plus=2
   loss_plus=1
-  gain_minus=1
+  gain_minus=1.5
   loss_minus=1.5
 
 
 safe_plus=1
 safe_minus=-1
 
-inverse_plus=-1
-inverse_minus=1
+inverse_plus=0
+inverse_minus=0
 
 correlation_per_name_12=1
 correlation_per_name_34=1
@@ -104,10 +104,12 @@ time_check_double = 5.0
 time_check_position = 1.0
 
 # Time to wait to check everything before execution time
-time_check_main = 5.0
+time_check_main = 15.0
+
+no_position_at_start=1
 
 # Forex Market
-Watch_List = ['AUDJPY.pro','EURUSD.pro', 'EURJPY.pro''GBPUSD.pro',
+Watch_List = ['AUDJPY.pro','EURUSD.pro', 'EURJPY.pro','GBPUSD.pro',
                 'USDJPY.pro', 'USDCHF.pro','GBPJPY.pro',
                 'AUDUSD.pro','CADJPY.pro','USDCAD.pro', 'CHFJPY.pro',
               'NZDUSD.pro','NZDJPY.pro']
@@ -343,6 +345,7 @@ class ConTrader:
         for s in possible_symbols:
             positions = self.mm.get_positions(s)
             if positions:
+                no_position_at_start=0
                 p = positions[0]
                 self.instrument = s
                 self.position = 1 if p.type == mt5.ORDER_TYPE_BUY else -1
@@ -356,7 +359,7 @@ class ConTrader:
                 self.first_run=0
                 assigned_symbols.append(self.instrument)
                 return
-
+            
         # Aucun position existante → assigner premier symbole dispo
         if possible_symbols:
             self.instrument = possible_symbols[0]
@@ -937,7 +940,7 @@ if __name__ == "__main__":
             trader8.emergency_change_instrument(Watch_List,[trader5.instrument,trader6.instrument,trader7.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
 
             # execute decisions
-            if time.time()-start>time_check_main:
+            if (time.time()-start>time_check_main and no_position_at_start==1) or no_position_at_start==0:
                 for t in traders:
                     t.execute_trades()
 
