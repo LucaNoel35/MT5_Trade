@@ -26,7 +26,7 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre =  62498017
+nombre =  62879429
 pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
@@ -58,7 +58,7 @@ correlation_divider = 2
 #correlation inversed (-1) means high risk high reward, and vice versa
 correlation_inverse=1
 high_correlation_value = 0.75
-low_correlation_value = high_correlation_value/3
+low_correlation_value = -high_correlation_value/3
 
 selection_condition_buy_sell=1
 
@@ -85,7 +85,7 @@ elif selection_gain_loss==3:
   gain_minus=1.5
   loss_minus=1.5
 
-position_fully_automated=1
+position_fully_automated=0
 
 safe_plus=1
 safe_minus=-1
@@ -226,6 +226,8 @@ class MarketManager:
 # =========================
 
 class ConTrader:
+    assigned_symbols_global = set()
+
     def __init__(self, mm: MarketManager, instrument, pip, decimal, strat, strat_close, gain, loss, space,
                  instrument_b, pourcentage, hedge, first_run, safe, inverse):
         self.mm = mm
@@ -307,7 +309,7 @@ class ConTrader:
         self.original_balance = None
         self.global_equity = None
 
-        self.correlation = 1
+        self.correlation = 0
         self.replacement = self.instrument
         self.replacement_b = self.instrument_b
         self.replaced = 0
@@ -331,22 +333,17 @@ class ConTrader:
 
     # ---------- utils ----------
 
-    def setUnits(self, watchlist, assigned_symbols=None):
-        if assigned_symbols is None:
-            assigned_symbols = []
-
+    def setUnits(self, watchlist):
         account_info = mt5.account_info()
         balance = account_info.balance if account_info else 0
         self.original_balance = balance
 
-        # Liste des symboles possibles pour ce trader
-        possible_symbols = [s for s in watchlist if s not in assigned_symbols]
+        # Vérifie les positions existantes sur symboles non déjà attribués
+        possible_symbols = [s for s in watchlist if s not in ConTrader.assigned_symbols_global]
 
-        # Cherche position existante sur symboles disponibles
         for s in possible_symbols:
             positions = self.mm.get_positions(s)
             if positions:
-                no_position_at_start=0
                 p = positions[0]
                 self.instrument = s
                 self.position = 1 if p.type == mt5.ORDER_TYPE_BUY else -1
@@ -357,16 +354,17 @@ class ConTrader:
                 self._set_pip_decimal(self.instrument)
                 print(f"{self.instrument} assigned from existing position, lots={self.units}")
                 self.beginning = -1
-                self.first_run=0
-                assigned_symbols.append(self.instrument)
+                self.first_run = 0
+                ConTrader.assigned_symbols_global.add(self.instrument)
                 return
-            
-        # Aucun position existante → assigner premier symbole dispo
+
+        # Si aucune position existante, assigner un symbole non pris
+        possible_symbols = [s for s in watchlist if s not in ConTrader.assigned_symbols_global]
         if possible_symbols:
             self.instrument = possible_symbols[0]
-        # fallback si plus rien dispo
         else:
-            self.instrument = self.instrument
+            # Fallback : choisir un symbole aléatoire (si tous pris)
+            self.instrument = random.choice(watchlist)
 
         hedge_fac = hedge_factor if self.hedge == -1 else 1
         lots = max(round((math.floor(((balance / 100000) * self.leverage) * 100)) / 100, 2), 0.01)
@@ -376,9 +374,9 @@ class ConTrader:
         self.latest_seen_position = 0
         self.price = None
         self._set_pip_decimal(self.instrument)
+
         print(f"{self.instrument} no existing position, lots={self.units}")
-        self.beginning = 1
-        assigned_symbols.append(self.instrument)
+        ConTrader.assigned_symbols_global.add(self.instrument)
 
     # ---------- Helper pour assigner decimal/pip ----------
     def _set_pip_decimal(self, instrument):
@@ -756,23 +754,42 @@ class ConTrader:
             self.instrument_b = trader_b.instrument
             self.replacement_b = trader_b.instrument
 
-    def emergency_change_instrument(self, Watchlist, ls):
-        if (self.instrument in ls) :
-            self.emergency=1
-            self.double_instrument+=1
-            temp = random.choice(Watchlist)
-            if temp not in ls:
-                self.replacement = temp
+    def emergency_change_instrument(self, watchlist, used_symbols):
+        """
+        Détecte et corrige les cas où un trader utilise le même instrument qu'un autre.
+        - watchlist : liste complète des symboles disponibles
+        - used_symbols : liste (ou set) des instruments déjà utilisés par d'autres traders
+        """
+
+        # Vérifie s’il y a un doublon d’instrument
+        duplicate = self.instrument in used_symbols
+
+        # Vérifie si instrument(s) sont invalides
+        invalid = (
+            self.instrument == self.instrument_b or
+            self.instrument not in watchlist or
+            self.instrument_b not in watchlist
+        )
+
+        if duplicate or invalid:
+            # Marque la situation d'urgence
+            self.emergency = 1
+            self.double_instrument += 1
+
+            # Choisir un nouveau symbole unique
+            available = [s for s in watchlist if s not in used_symbols and s != self.instrument]
+            if available:
+                self.replacement = random.choice(available)
+                print(f"[⚠️ EMERGENCY] {self.instrument} doublon détecté — remplacement par {self.replacement}")
                 self.replace_instrument()
-        elif (self.instrument==self.instrument_b) or (self.instrument not in Watchlist ) or (self.instrument_b not in Watchlist ):
-            self.emergency=1
-            temp = random.choice(Watchlist)
-            if temp not in ls:
-                self.replacement = temp
-                self.replace_instrument()
+            else:
+                print(f"[⚠️ EMERGENCY] {self.instrument} doublon détecté mais aucun instrument libre disponible.")
         else:
-            self.emergency=0
-            self.double_instrument=0
+            # Aucun problème
+            if self.emergency:
+                print(f"[✅ STABLE] {self.instrument} est à nouveau unique et valide.")
+            self.emergency = 0
+            self.double_instrument = 0
 
 
     def random_change_instrument(self, Watchlist, ls):
@@ -873,9 +890,8 @@ if __name__ == "__main__":
 
     traders = [trader1,trader2,trader3,trader4,trader5,trader6,trader7,trader8]
 
-    assigned_symbols = []
     for t in traders:
-        t.setUnits(Watch_List,assigned_symbols)
+        t.setUnits(Watch_List)
 
     # Prime correlation state with preloaded bars
     for t in traders:
@@ -934,15 +950,10 @@ if __name__ == "__main__":
             trader7.place_info(trader8); trader8.place_info(trader7)
 
             # emergency changes (use watchlists)
-            trader1.emergency_change_instrument(Watch_List,[trader2.instrument,trader3.instrument,trader4.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument])
-            trader2.emergency_change_instrument(Watch_List,[trader1.instrument,trader3.instrument,trader4.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument])
-            trader3.emergency_change_instrument(Watch_List,[trader2.instrument,trader1.instrument,trader4.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument])
-            trader4.emergency_change_instrument(Watch_List,[trader3.instrument,trader2.instrument,trader1.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument])
-
-            trader5.emergency_change_instrument(Watch_List,[trader6.instrument,trader7.instrument,trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
-            trader6.emergency_change_instrument(Watch_List,[trader5.instrument,trader7.instrument,trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
-            trader7.emergency_change_instrument(Watch_List,[trader5.instrument,trader6.instrument,trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
-            trader8.emergency_change_instrument(Watch_List,[trader5.instrument,trader6.instrument,trader7.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument])
+            for t in traders:
+                # Liste des instruments utilisés par les autres traders
+                used_by_others = [x.instrument for x in traders if x is not t]
+                t.emergency_change_instrument(Watch_List, used_by_others)
 
             # execute decisions
             if (time.time()-start>time_check_main and no_position_at_start==1) or no_position_at_start==0:
