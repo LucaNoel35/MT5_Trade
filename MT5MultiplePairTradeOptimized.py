@@ -51,14 +51,14 @@ value_spread_multiplier = 10
 minimal_pip_multiplier = 20
 minimal_avg_pip_multiplier = 25
 
-correlation_number = 60
+correlation_number = 120
 correlation_multiplier = 4
 correlation_divider = 2
 
 #correlation inversed (-1) means high risk high reward, and vice versa
 correlation_inverse=1
 high_correlation_value = 0.75
-low_correlation_value = -high_correlation_value/3
+low_correlation_value = high_correlation_value/3
 
 selection_condition_buy_sell=1
 
@@ -86,6 +86,7 @@ elif selection_gain_loss==3:
   loss_minus=1.5
 
 position_fully_automated=0
+position_partially_automated=1
 
 safe_plus=1
 safe_minus=-1
@@ -93,10 +94,10 @@ safe_minus=-1
 inverse_plus=0
 inverse_minus=0
 
-correlation_per_name_12=0
-correlation_per_name_34=0
-correlation_per_name_56=0
-correlation_per_name_78=0
+correlation_per_name_12=1
+correlation_per_name_34=1
+correlation_per_name_56=1
+correlation_per_name_78=1
 
 # Time to wait to check double instrument in s
 time_check_double = 5.0
@@ -275,11 +276,10 @@ class ConTrader:
         self.PL_b = 0
         self.PL_tot = 0
 
-        self.pip_loss = minimal_pip_multiplier * self.pip
-        self.spread = minimal_pip_multiplier * self.pip
-        self.spread_total = minimal_pip_multiplier * self.pip
+        self.spread = ((minimal_pip_multiplier+minimal_avg_pip_multiplier)/2)* self.pip
+        self.spread_total = ((minimal_pip_multiplier+minimal_avg_pip_multiplier)/2)* self.pip
         self.spread_count = 1
-        self.spread_average = minimal_pip_multiplier * self.pip
+        self.spread_average = ((minimal_pip_multiplier+minimal_avg_pip_multiplier)/2)*self.pip
         self.score = 0
         self.score_b = 0
         self.bid = 0
@@ -433,7 +433,7 @@ class ConTrader:
         if now - self._last_corr_check < self.corr_interval_s:
             return
         if self.raw_data is None or self.raw_data_b is None:
-            self.correlation = 1
+            self.correlation = 0
             self._last_corr_check = now
             return
         data = {
@@ -443,7 +443,7 @@ class ConTrader:
         df = pd.DataFrame(data)
         corr_df = df.corr()
         if corr_df.where(corr_df < 1).stack().empty:
-            self.correlation = 1
+            self.correlation = 0
         else:
             max_corr_index = corr_df.where(corr_df < 1).stack().idxmax()
             corr = corr_df.loc[max_corr_index]
@@ -452,7 +452,7 @@ class ConTrader:
 
     def highly_correlate(self):
         if self.raw_data is None or self.raw_data_b is None:
-            self.correlation = 1
+            self.correlation = 0
             return
         data = {
             self.instrument_b: self.raw_data_b['c'],
@@ -461,7 +461,7 @@ class ConTrader:
         df = pd.DataFrame(data)
         corr_df = df.corr()
         if corr_df.where(corr_df < 1).stack().empty:
-            self.correlation = 1
+            self.correlation = 0
         else:
             max_corr_index = corr_df.where(corr_df < 1).stack().idxmax()
             corr = corr_df.loc[max_corr_index]
@@ -543,8 +543,8 @@ class ConTrader:
         if self.raw_data is not None and (self.last_bar is not None) and (self.raw_data.index[-1] == self.last_bar):
             pass
         else:
-            self.spread = minimal_pip_multiplier*self.pip
-            self.spread_total = minimal_pip_multiplier*self.pip
+            self.spread = ((minimal_pip_multiplier+minimal_avg_pip_multiplier)/2)*self.pip
+            self.spread_total = ((minimal_pip_multiplier+minimal_avg_pip_multiplier)/2)*self.pip
             self.spread_count = 1
             self.spread_average = ((minimal_pip_multiplier+minimal_avg_pip_multiplier)/2)*self.pip
             self.count = 0
@@ -630,7 +630,7 @@ class ConTrader:
             can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and self.correlation == 1 and self.emergency == 0 and self.double_instrument==0 and (not self.quota) and ((self.count > time_check_position and self.beginning != 1) or self.beginning == 1) and self.instrument!=self.instrument_b and self.position==0)
             if can_trade:
                 # sell setup
-                if  position_fully_automated==1:
+                if  position_partially_automated==1:
                     cond_sell = (((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1) or (self.first_run==-1 and self.position_b == 0)
                     cond_buy = (((self.config == 1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == -1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == -1) or (self.first_run==1 and self.position_b == 0)
                 else:
