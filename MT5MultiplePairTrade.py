@@ -89,7 +89,7 @@ elif selection_gain_loss==3:
 safe_plus=1
 safe_minus=-1
 
-inverse_plus=1
+inverse_plus=0
 inverse_minus=0
 
 correlation_per_name_12=1
@@ -947,3 +947,4 @@ if __name__ == "__main__":
             print(mt5.last_error())
 
     sys.exit(0)
+
