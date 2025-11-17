@@ -62,7 +62,7 @@ low_correlation_value = high_correlation_value/3
 
 selection_condition_buy_sell=1
 
-selection_gain_loss=1
+selection_gain_loss=0
 
 gain_plus=2
 loss_plus=1
