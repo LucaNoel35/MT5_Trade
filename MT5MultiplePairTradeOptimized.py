@@ -82,7 +82,7 @@ elif selection_gain_loss==2:
 elif selection_gain_loss==3:
   gain_plus=2
   loss_plus=1
-  gain_minus=1.5
+  gain_minus=1
   loss_minus=1.5
 
 position_fully_automated=0
