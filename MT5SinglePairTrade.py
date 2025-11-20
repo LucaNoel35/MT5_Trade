@@ -7,7 +7,6 @@ import math
 import pandas as pd
 import numpy as np
 import MetaTrader5 as mt5
-from threading import Thread
 import sys
 import ta
 
@@ -19,7 +18,6 @@ server_name = 'OANDATMS-MT5'
 
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 
-thread_running=0
 global_margin=0
 global_equity=0
 number_of_instrument = 8
@@ -309,77 +307,6 @@ class ConTrader:
                 self.position_2=1
                 self.position_3=1
                 self.position_4=1
-            """   
-
-            elif self.counter_buy==3 and self.counter_sell==0:
-                self.position_1=1
-                self.position_2=1
-                self.position_3=1
-                self.position_4=0
-            
-
-            elif self.counter_buy==4 and self.counter_sell==0:
-                self.position_1=1
-                self.position_2=1
-                self.position_3=1
-                self.position_4=1
-
-            elif self.counter_buy==0 and self.counter_sell==1:
-                self.position_1=0
-                self.position_2=0
-                self.position_3=0
-                self.position_4=-1
-
-
-
-            elif self.counter_buy==2 and self.counter_sell==1:
-                self.position_1=1
-                self.position_2=1
-                self.position_3=0
-                self.position_4=-1
-
-            elif self.counter_buy==3 and self.counter_sell==1:
-                self.position_1=1
-                self.position_2=1
-                self.position_3=1
-                self.position_4=-1
-
-            elif self.counter_buy==0 and self.counter_sell==2:
-                self.position_1=0
-                self.position_2=0
-                self.position_3=-1
-                self.position_4=-1
-
-            elif self.counter_buy==1 and self.counter_sell==2:
-                self.position_1=1
-                self.position_2=0
-                self.position_3=-1
-                self.position_4=-1
-
-            elif self.counter_buy==2 and self.counter_sell==2:
-                self.position_1=1
-                self.position_2=1
-                self.position_3=-1
-                self.position_4=-1
-
-            elif self.counter_buy==0 and self.counter_sell==3:
-                self.position_1=0
-                self.position_2=-1
-                self.position_3=-1
-                self.position_4=-1
-
-            elif self.counter_buy==1 and self.counter_sell==3:
-                self.position_1=1
-                self.position_2=-1
-                self.position_3=-1
-                self.position_4=-1  
-
-            elif self.counter_buy==0 and self.counter_sell==4:
-                self.position_1=-1
-                self.position_2=-1
-                self.position_3=-1
-                self.position_4=-1
-            """
 
 
     def get_ask_bid(self):
@@ -415,47 +342,33 @@ class ConTrader:
 
     def performTrade(self):
 
-        self.get_most_recent()
         self.last_bar = self.raw_data.index[-1]
-        self.prepare_data()
         previous_time=self.last_bar
-        val=max(value_spread_multiplier*self.spread,self.atr) 
+        try:
+            self.get_most_recent(sample_number)                                                            
+            self.prepare_data()
+            val=max(value_spread_multiplier*self.spread,self.atr) 
+            self.val=val
 
-        self.execute_trades(1,-1,"price_1","price_2","position_1","position_2",self.loss,self.gain,self.mid_value,self.loss,-1,1,-1,0)
-        self.execute_trades(-1,1,"price_2","price_1","position_2","position_1",self.mid_value,self.loss,self.loss,self.gain,-1,1,1,0)        
-        #self.execute_trades(-1,1,"price_3","position_3",self.mid_value,self.loss,-1,1)
-        #self.execute_trades(-1,1,"price_4","position_4",self.gain,self.gain,-1,1)
-        self.val=val
-        while True:
-            try:
-
-                self.get_most_recent(sample_number)                                                            
-                self.prepare_data()
-                val=max(value_spread_multiplier*self.spread,self.atr) 
-                if self.positions!=None:
-                    self.execute_trades(1,-1,"price_1","price_2","position_1","position_2",self.loss,self.gain,self.mid_value,self.loss,-1,1,-1,0)
-                    self.execute_trades(-1,1,"price_2","price_1","position_2","position_1",self.mid_value,self.loss,self.loss,self.gain,-1,1,1,0)        
-                    #self.execute_trades(-1,1,"price_3","position_3",self.mid_value,self.loss,-1,1)
-                    #self.execute_trades(-1,1,"price_4","position_4",self.gain,self.gain,-1,1)
-                self.val=val
-                if  previous_time!=self.last_bar  :   
-                    previous_time= self.last_bar     
-                    phrasing="\n {} {} price 1 {} price 2 {} price 3 {} price 4 {}  position 1 {} position 2 {} position 3 {} position 4 {} \n".format(self.last_bar, self.instrument,self.price_1,self.price_2,self.price_3,self.price_4,self.position_1,self.position_2,self.position_3,self.position_4)             
-                    print(phrasing)
-                    self.spread = minimal_pip_multiplier*self.pip
-                    self.spread_total = minimal_pip_multiplier*self.pip
-                    self.spread_count = 1
-                    self.spread_average = ((minimal_pip_multiplier+minimal_avg_pip_multiplier)/2)*self.pip
-            except:
-                error_message = mt5.last_error()
-                print(f"Something went wrong : {error_message} \n")
+            if self.positions!=None:
+                self.execute_trades(1,-1,"price_1","price_2","position_1","position_2",self.loss,self.gain,self.mid_value,self.loss,-1,1,-1,0)
+                self.execute_trades(-1,1,"price_2","price_1","position_2","position_1",self.mid_value,self.loss,self.loss,self.gain,-1,1,1,0)        
+                #self.execute_trades(-1,1,"price_3","position_3",self.mid_value,self.loss,-1,1)
+                #self.execute_trades(-1,1,"price_4","position_4",self.gain,self.gain,-1,1)
+            self.val=val
+            if  previous_time!=self.last_bar  :   
+                previous_time= self.last_bar     
+                phrasing="\n {} {} price 1 {} price 2 {} price 3 {} price 4 {}  position 1 {} position 2 {} position 3 {} position 4 {} \n".format(self.last_bar, self.instrument,self.price_1,self.price_2,self.price_3,self.price_4,self.position_1,self.position_2,self.position_3,self.position_4)             
+                print(phrasing)
+                self.spread = minimal_pip_multiplier*self.pip
+                self.spread_total = minimal_pip_multiplier*self.pip
+                self.spread_count = 1
+                self.spread_average = ((minimal_pip_multiplier+minimal_avg_pip_multiplier)/2)*self.pip
+        except:
+            error_message = mt5.last_error()
+            print(f"Something went wrong : {error_message} \n")
 
                            
-    def runTrade(self):
-        
-        self.thread= Thread(target=self.performTrade)
-        self.thread.daemon=True   
-        self.thread.start()
 
     def wwma(self,values, n):
         """
@@ -937,17 +850,6 @@ if __name__ == "__main__":
     trader7.get_most_recent(sample_number)    
     trader8.get_most_recent(sample_number) 
 
-    thread1=trader1.runTrade()   
-    thread2=trader2.runTrade() 
-     
-    thread3=trader3.runTrade()   
-    thread4=trader4.runTrade()  
-
-    thread5=trader5.runTrade()   
-    thread6=trader6.runTrade() 
-     
-    thread7=trader7.runTrade()   
-    thread8=trader8.runTrade()
 
     while True:
         now = datetime.now(timezone.utc)
@@ -961,8 +863,19 @@ if __name__ == "__main__":
                 break
         """
 
-        try :             
-            thread_running = 1  
+        try :         
+            trader1.performTrade()   
+            trader2.performTrade() 
+            
+            trader3.performTrade()   
+            trader4.performTrade()  
+
+            trader5.performTrade()   
+            trader6.performTrade() 
+            
+            trader7.performTrade()   
+            trader8.performTrade()
+    
             if mt5.last_error()[0]!=1:
                 mt5.initialize(login = nombre, password = pwd, server = server_name, path = path_name)
                 print("initialize() failed")
@@ -970,8 +883,8 @@ if __name__ == "__main__":
         except:
             print("Trading not active")
             print(mt5.last_error())
-            thread_running =0
     sys.exit()
+
 
 
 
