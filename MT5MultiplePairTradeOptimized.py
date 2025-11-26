@@ -343,7 +343,6 @@ class ConTrader:
 
         for s in possible_symbols:
             positions = self.mm.get_positions(s)
-
             if correlation_per_name==1:
                 if correlation_inverse==1:
                     if ((s[-7:] != self.instrument_b[-7:] and s[:3] != self.instrument_b[:3])):
@@ -890,8 +889,29 @@ if __name__ == "__main__":
 
     traders = [trader1,trader2,trader3,trader4,trader5,trader6,trader7,trader8]
 
-    for t in traders:
-        t.setUnits(Watch_List)
+    trader1.setUnits(Watch_List)
+    trader2.place_info(trader1)
+
+    trader2.setUnits(Watch_List)
+    trader1.place_info(trader2)
+
+    trader3.setUnits(Watch_List)
+    trader4.place_info(trader3)
+
+    trader4.setUnits(Watch_List)
+    trader3.place_info(trader4)
+
+    trader5.setUnits(Watch_List)
+    trader6.place_info(trader5)
+
+    trader6.setUnits(Watch_List)
+    trader5.place_info(trader6)
+
+    trader7.setUnits(Watch_List)
+    trader8.place_info(trader7)
+
+    trader8.setUnits(Watch_List)
+    trader7.place_info(trader8)
 
     # Prime correlation state with preloaded bars
     for t in traders:
