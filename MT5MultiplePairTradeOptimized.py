@@ -26,7 +26,7 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre =  62091829
+nombre =  62356162
 pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
@@ -57,42 +57,44 @@ correlation_divider = 2
 
 #correlation inversed (-1) means high risk high reward, and vice versa
 correlation_inverse=1
+continuous_corr_calculus=1
+
 high_correlation_value = 0.75
 low_correlation_value = high_correlation_value/3
 
 selection_condition_buy_sell=1
 
-selection_gain_loss=0
+selection_gain_loss=1
 
-gain_plus=2
-loss_plus=1
-gain_minus=2
-loss_minus=1
+gain_plus=1
+loss_plus=2
+gain_minus=1
+loss_minus=2
 
 if selection_gain_loss==1:
   gain_plus=2
   loss_plus=1
-  gain_minus=1
-  loss_minus=1
+  gain_minus=1.5
+  loss_minus=1.5
 elif selection_gain_loss==2:
-  gain_plus=1.5
+  gain_plus=2
   loss_plus=1
   gain_minus=1
   loss_minus=2
 elif selection_gain_loss==3:
-  gain_plus=2
+  gain_plus=1.5
   loss_plus=1
   gain_minus=1
-  loss_minus=1.5
+  loss_minus=2
 
 position_fully_automated=0
-position_partially_automated=1
+position_partially_automated=0
 
-safe_plus=1
+safe_plus=-1
 safe_minus=-1
 
-inverse_plus=0
-inverse_minus=0
+inverse_plus=-1
+inverse_minus=-1
 
 correlation_per_name_12=1
 correlation_per_name_34=1
@@ -447,7 +449,7 @@ class ConTrader:
         else:
             max_corr_index = corr_df.where(corr_df < 1).stack().idxmax()
             corr = corr_df.loc[max_corr_index]
-            self.correlation = 1 if corr*correlation_inverse > low_correlation_value*correlation_inverse and (self.instrument != self.instrument_b) else 0
+            self.correlation = 1 if (corr*correlation_inverse > low_correlation_value*correlation_inverse and (self.instrument != self.instrument_b)) or continuous_corr_calculus==0 else 0
         self._last_corr_check = now
 
     def highly_correlate(self):
@@ -627,7 +629,7 @@ class ConTrader:
             if self.count > time_check_position:
                 self.position = 0; self.PL = 0
 
-            can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and self.correlation == 1 and self.emergency == 0 and self.double_instrument==0 and (not self.quota) and ((self.count > time_check_position and self.beginning != 1) or self.beginning == 1) and self.instrument!=self.instrument_b and self.position==0)
+            can_trade = (self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip and timing and (self.correlation == 1) and self.emergency == 0 and self.double_instrument==0 and (not self.quota) and ((self.count > time_check_position and self.beginning != 1) or self.beginning == 1) and self.instrument!=self.instrument_b and self.position==0)
             if can_trade:
                 # sell setup
                 if  position_partially_automated==1:
@@ -904,6 +906,22 @@ if __name__ == "__main__":
     for idx, t in enumerate(traders, start=1):
         print(f"Trader{idx} {t.instrument} corr={t.correlation}")
 
+    if (trader1.correlation == 0 and trader1.replacement == trader1.instrument) or (trader2.correlation == 0 and trader2.replacement == trader2.instrument):
+        correlation_matrix(mm, trader1, trader2, [trader3.instrument, trader4.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument], Watch_List, correlation_per_name_12)
+    # Pair 2
+    if (trader3.correlation == 0 and trader3.replacement == trader3.instrument) or (trader4.correlation == 0 and trader4.replacement == trader4.instrument):
+        correlation_matrix(mm, trader3, trader4, [trader2.instrument, trader1.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument], Watch_List, correlation_per_name_34)
+    # Pair 3
+    if (trader5.correlation == 0 and trader5.replacement == trader5.instrument) or (trader6.correlation == 0 and trader6.replacement == trader6.instrument):
+        correlation_matrix(mm, trader5, trader6, [trader7.instrument, trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument], Watch_List, correlation_per_name_56)
+    # Pair 4
+    if (trader7.correlation == 0 and trader7.replacement == trader7.instrument) or (trader8.correlation == 0 and trader8.replacement == trader8.instrument):
+        correlation_matrix(mm, trader7, trader8, [trader5.instrument, trader6.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument], Watch_List, correlation_per_name_78)
+
+    # allow instrument replacement when safe
+    for t in traders:
+        t.replace_instrument()
+
     start=time.time()
 
     # Main scheduler loop
@@ -931,17 +949,18 @@ if __name__ == "__main__":
 
             # correlation maintenance (throttled via trader.corr_interval_s)
             # Pair 1
-            if (trader1.correlation == 0 and trader1.replacement == trader1.instrument) or (trader2.correlation == 0 and trader2.replacement == trader2.instrument):
-                correlation_matrix(mm, trader1, trader2, [trader3.instrument, trader4.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument], Watch_List, correlation_per_name_12)
-            # Pair 2
-            if (trader3.correlation == 0 and trader3.replacement == trader3.instrument) or (trader4.correlation == 0 and trader4.replacement == trader4.instrument):
-                correlation_matrix(mm, trader3, trader4, [trader2.instrument, trader1.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument], Watch_List, correlation_per_name_34)
-            # Pair 3
-            if (trader5.correlation == 0 and trader5.replacement == trader5.instrument) or (trader6.correlation == 0 and trader6.replacement == trader6.instrument):
-                correlation_matrix(mm, trader5, trader6, [trader7.instrument, trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument], Watch_List, correlation_per_name_56)
-            # Pair 4
-            if (trader7.correlation == 0 and trader7.replacement == trader7.instrument) or (trader8.correlation == 0 and trader8.replacement == trader8.instrument):
-                correlation_matrix(mm, trader7, trader8, [trader5.instrument, trader6.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument], Watch_List, correlation_per_name_78)
+            if continuous_corr_calculus!=0:
+                if (trader1.correlation == 0 and trader1.replacement == trader1.instrument) or (trader2.correlation == 0 and trader2.replacement == trader2.instrument):
+                    correlation_matrix(mm, trader1, trader2, [trader3.instrument, trader4.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument], Watch_List, correlation_per_name_12)
+                # Pair 2
+                if (trader3.correlation == 0 and trader3.replacement == trader3.instrument) or (trader4.correlation == 0 and trader4.replacement == trader4.instrument):
+                    correlation_matrix(mm, trader3, trader4, [trader2.instrument, trader1.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument], Watch_List, correlation_per_name_34)
+                # Pair 3
+                if (trader5.correlation == 0 and trader5.replacement == trader5.instrument) or (trader6.correlation == 0 and trader6.replacement == trader6.instrument):
+                    correlation_matrix(mm, trader5, trader6, [trader7.instrument, trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument], Watch_List, correlation_per_name_56)
+                # Pair 4
+                if (trader7.correlation == 0 and trader7.replacement == trader7.instrument) or (trader8.correlation == 0 and trader8.replacement == trader8.instrument):
+                    correlation_matrix(mm, trader7, trader8, [trader5.instrument, trader6.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument], Watch_List, correlation_per_name_78)
 
             # propagate counterpart info
             trader1.place_info(trader2); trader2.place_info(trader1)
