@@ -26,7 +26,7 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre =  62496948
+nombre =  62473178
 pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
@@ -887,31 +887,17 @@ if __name__ == "__main__":
     trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader8_instrument,quota_gain, 1, -1,safe_minus,inverse_minus)
     trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus ,0, trader7_instrument,quota_gain,-1,1,safe_plus,inverse_plus)
 
-    traders = [trader1,trader2,trader3,trader4,trader5,trader6,trader7,trader8]
+    traders = [trader1, trader2, trader3, trader4, trader5, trader6, trader7, trader8]
 
-    trader1.setUnits(Watch_List)
-    trader2.place_info(trader1)
+    for i in range(0, len(traders), 2):
+        t1 = traders[i]
+        t2 = traders[i+1]
 
-    trader2.setUnits(Watch_List)
-    trader1.place_info(trader2)
+        t1.setUnits(Watch_List)
+        t2.place_info(t1)
 
-    trader3.setUnits(Watch_List)
-    trader4.place_info(trader3)
-
-    trader4.setUnits(Watch_List)
-    trader3.place_info(trader4)
-
-    trader5.setUnits(Watch_List)
-    trader6.place_info(trader5)
-
-    trader6.setUnits(Watch_List)
-    trader5.place_info(trader6)
-
-    trader7.setUnits(Watch_List)
-    trader8.place_info(trader7)
-
-    trader8.setUnits(Watch_List)
-    trader7.place_info(trader8)
+        t2.setUnits(Watch_List)
+        t1.place_info(t2)
 
     # Prime correlation state with preloaded bars
     for t in traders:
