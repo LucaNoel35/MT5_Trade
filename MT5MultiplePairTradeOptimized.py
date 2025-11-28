@@ -106,7 +106,7 @@ time_check_double = 5.0
 time_check_position = 1.0
 
 # Time to wait to check everything before execution time
-time_check_main = 15.0
+time_check_main = 5.0
 
 no_position_at_start=1
 
@@ -949,9 +949,11 @@ if __name__ == "__main__":
                     if (t1.correlation == 0 and t1.replacement == t1.instrument) or (t2.correlation == 0 and t2.replacement == t2.instrument):
                         correlation_matrix(mm, t1, t2, others, Watch_List)
 
-                    # propagate counterpart info
-                    t1.place_info(t2); t2.place_info(t1)
-
+            for i in range(0, len(traders), 2):
+                t1 = traders[i]
+                t2 = traders[i+1]
+                # propagate counterpart info
+                t1.place_info(t2); t2.place_info(t1)
 
             # emergency changes (use watchlists)
             for t in traders:
@@ -959,13 +961,11 @@ if __name__ == "__main__":
                 used_by_others = [x.instrument for x in traders if x is not t]
                 t.emergency_change_instrument(Watch_List, used_by_others)
 
-            # execute decisions
-            if (time.time()-start>time_check_main and no_position_at_start==1) or no_position_at_start==0:
-                for t in traders:
+                # execute decisions
+                if (time.time()-start>time_check_main and no_position_at_start==1) or no_position_at_start==0:
                     t.execute_trades()
-
-            # allow instrument replacement when safe
-            for t in traders:
+                    
+                # allow instrument replacement when safe
                 t.replace_instrument()
 
             # pace with timeframe; 1s is enough for M1
