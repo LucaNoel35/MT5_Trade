@@ -879,38 +879,31 @@ if __name__ == "__main__":
 
     traders = [trader1, trader2, trader3, trader4, trader5, trader6, trader7, trader8]
 
-    for i in range(0, len(traders), 2):
-        t1 = traders[i]
-        t2 = traders[i+1]
-
-        t1.setUnits(Watch_List)
-        t2.place_info(t1)
-
-        t2.setUnits(Watch_List)
-        t1.place_info(t2)
-
+    # settings size, instruments, and existing positions
     # Prime correlation state with preloaded bars
-    for t in traders:
-        t.get_most_recent()
     # high correlation warmup
+
     for t in traders:
+        t.setUnits(Watch_List)
+        t.get_most_recent()
         t.highly_correlate()
 
     print("Warmup correlation:")
     for idx, t in enumerate(traders, start=1):
         print(f"Trader{idx} {t.instrument} corr={t.correlation}")
 
-    if (trader1.correlation == 0 and trader1.replacement == trader1.instrument) or (trader2.correlation == 0 and trader2.replacement == trader2.instrument):
-        correlation_matrix(mm, trader1, trader2, [trader3.instrument, trader4.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument], Watch_List)
-    # Pair 2
-    if (trader3.correlation == 0 and trader3.replacement == trader3.instrument) or (trader4.correlation == 0 and trader4.replacement == trader4.instrument):
-        correlation_matrix(mm, trader3, trader4, [trader2.instrument, trader1.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument], Watch_List)
-    # Pair 3
-    if (trader5.correlation == 0 and trader5.replacement == trader5.instrument) or (trader6.correlation == 0 and trader6.replacement == trader6.instrument):
-        correlation_matrix(mm, trader5, trader6, [trader7.instrument, trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument], Watch_List)
-    # Pair 4
-    if (trader7.correlation == 0 and trader7.replacement == trader7.instrument) or (trader8.correlation == 0 and trader8.replacement == trader8.instrument):
-        correlation_matrix(mm, trader7, trader8, [trader5.instrument, trader6.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument], Watch_List)
+        
+    # paires indexées : (0,1), (2,3), (4,5), (6,7)
+    for i in range(0, len(traders), 2):
+        t1 = traders[i]
+        t2 = traders[i+1]
+
+        # liste des autres instruments
+        others = [t.instrument for j, t in enumerate(traders) if j not in (i, i+1)]
+
+        # condition
+        if (t1.correlation == 0 and t1.replacement == t1.instrument) or (t2.correlation == 0 and t2.replacement == t2.instrument):
+            correlation_matrix(mm, t1, t2, others, Watch_List)
 
     # allow instrument replacement when safe
     for t in traders:
@@ -944,23 +937,21 @@ if __name__ == "__main__":
             # correlation maintenance (throttled via trader.corr_interval_s)
             # Pair 1
             if continuous_corr_calculus!=0:
-                if (trader1.correlation == 0 and trader1.replacement == trader1.instrument) or (trader2.correlation == 0 and trader2.replacement == trader2.instrument):
-                    correlation_matrix(mm, trader1, trader2, [trader3.instrument, trader4.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument], Watch_List)
-                # Pair 2
-                if (trader3.correlation == 0 and trader3.replacement == trader3.instrument) or (trader4.correlation == 0 and trader4.replacement == trader4.instrument):
-                    correlation_matrix(mm, trader3, trader4, [trader2.instrument, trader1.instrument,trader5.instrument,trader6.instrument,trader7.instrument,trader8.instrument], Watch_List)
-                # Pair 3
-                if (trader5.correlation == 0 and trader5.replacement == trader5.instrument) or (trader6.correlation == 0 and trader6.replacement == trader6.instrument):
-                    correlation_matrix(mm, trader5, trader6, [trader7.instrument, trader8.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument], Watch_List)
-                # Pair 4
-                if (trader7.correlation == 0 and trader7.replacement == trader7.instrument) or (trader8.correlation == 0 and trader8.replacement == trader8.instrument):
-                    correlation_matrix(mm, trader7, trader8, [trader5.instrument, trader6.instrument,trader1.instrument,trader2.instrument,trader3.instrument,trader4.instrument], Watch_List)
+                # paires indexées : (0,1), (2,3), (4,5), (6,7)
+                for i in range(0, len(traders), 2):
+                    t1 = traders[i]
+                    t2 = traders[i+1]
 
-            # propagate counterpart info
-            trader1.place_info(trader2); trader2.place_info(trader1)
-            trader3.place_info(trader4); trader4.place_info(trader3)
-            trader5.place_info(trader6); trader6.place_info(trader5)
-            trader7.place_info(trader8); trader8.place_info(trader7)
+                    # liste des autres instruments
+                    others = [t.instrument for j, t in enumerate(traders) if j not in (i, i+1)]
+
+                    # condition
+                    if (t1.correlation == 0 and t1.replacement == t1.instrument) or (t2.correlation == 0 and t2.replacement == t2.instrument):
+                        correlation_matrix(mm, t1, t2, others, Watch_List)
+
+                    # propagate counterpart info
+                    t1.place_info(t2); t2.place_info(t1)
+
 
             # emergency changes (use watchlists)
             for t in traders:
