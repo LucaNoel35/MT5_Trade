@@ -353,7 +353,6 @@ class ConTrader:
                 self.initial_units = self.units
                 self._set_pip_decimal(self.instrument)
                 print(f"{self.instrument} assigned from existing position, lots={self.units}")
-                self.beginning = -1
                 self.first_run = 0
                 ConTrader.assigned_symbols_global.add(self.instrument)
                 return
@@ -569,9 +568,7 @@ class ConTrader:
                 self.close_position(positions)
                 self.price = self.close
                 return       
-
-            if self.beginning==1:
-                self.beginning = -1
+                
               
             if self.first_run!=0:
                 self.first_run=0
@@ -585,13 +582,13 @@ class ConTrader:
 
                 if cond_ok_spread:
                     if (self.config == 1*self.strat_close and self.objectif_reached_buy(self.price) and cond_ok_buy_b and (self.position_b == -1 and self.safe == -1)):
-                        self.price = self.close; self.count = 0; self.close_position(positions); 
+                        self.price = self.close; self.count = 0; self.close_position(positions); self.beginning = -1; self.first_run=0
                         if self.space == 0 and position_fully_automated==1: self.previous_position = 1
                     elif (self.config == 1*self.strat_close and self.objectif_reached_buy(self.price) and (self.position_b != -1 or self.safe != -1)):
-                        self.price = self.close; self.count = 0; self.close_position(positions); 
+                        self.price = self.close; self.count = 0; self.close_position(positions); self.beginning = -1; self.first_run=0
                         if self.space == 0 and position_fully_automated==1: self.previous_position = 1
                     elif (self.objectif_reached_buy(self.price) and self.correlation == 0 and self.position_b == 0 and self.instrument_b == self.replacement_b):
-                        self.price = self.close; self.count = 0; self.close_position(positions); 
+                        self.price = self.close; self.count = 0; self.close_position(positions); self.beginning = -1; self.first_run=0
                         if self.space == 0 and position_fully_automated==1: self.previous_position = 1
             else:  # SELL open
                 cond_ok_spread = ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip) and self.position_b == 1) or self.position_b != 1
@@ -602,13 +599,13 @@ class ConTrader:
                   
                 if cond_ok_spread:
                     if (self.config == -1*self.strat_close and self.objectif_reached_sell(self.price)  and cond_ok_sell_b and (self.position_b == 1 and self.safe == -1)):
-                        self.price = self.close; self.count = 0; self.close_position(positions); 
+                        self.price = self.close; self.count = 0; self.close_position(positions); self.beginning = -1; self.first_run=0
                         if self.space == 0 and position_fully_automated==1: self.previous_position = -1
                     elif (self.config == -1*self.strat_close and self.objectif_reached_sell(self.price) and (self.position_b != 1 or self.safe != -1)):
-                        self.price = self.close; self.count = 0; self.close_position(positions); 
+                        self.price = self.close; self.count = 0; self.close_position(positions); self.beginning = -1; self.first_run=0
                         if self.space == 0 and position_fully_automated==1: self.previous_position = -1
                     elif (self.objectif_reached_sell(self.price) and self.correlation == 0 and self.position_b == 0 and self.instrument_b == self.replacement_b):
-                        self.price = self.close; self.count = 0; self.close_position(positions); 
+                        self.price = self.close; self.count = 0; self.close_position(positions); self.beginning = -1; self.first_run=0
                         if self.space == 0 and position_fully_automated==1: self.previous_position = -1
         elif len(positions) ==0 :
             # no open position for this symbol
@@ -623,18 +620,18 @@ class ConTrader:
             if can_trade:
                 # sell setup
                 if  position_partially_automated==1:
-                    cond_sell = (((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1) or (self.first_run==-1 and self.position_b == 0)
-                    cond_buy = (((self.config == 1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == -1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == -1) or (self.first_run==1 and self.position_b == 0)
+                    cond_sell = ( ((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1) or (self.first_run==-1 and self.position_b == 0)
+                    cond_buy = ( ((self.config == 1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == -1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == -1) or (self.first_run==1 and self.position_b == 0)
                 else:
                     cond_sell = (self.config == -1*self.strat) 
                     cond_buy = (self.config == 1*self.strat)               
                 far_enough = (abs(self.close - self.price) > self.space*val) or (self.initialize == 1)
                 if cond_sell and far_enough:
                     self.sell_order(self.units)
-                    self.price = self.close; self.val = val; self.beginning = -1; self.initialize = -1; self.count = 0; self.first_run=0
+                    self.price = self.close; self.val = val; self.initialize = -1; self.count = 0
                 elif cond_buy and far_enough:
                     self.buy_order(self.units)
-                    self.price = self.close; self.val = val; self.beginning = -1; self.initialize = -1; self.count = 0; self.first_run=0
+                    self.price = self.close; self.val = val; self.initialize = -1; self.count = 0
 
     # ---------- orders ----------
     def sell_order(self, value):
