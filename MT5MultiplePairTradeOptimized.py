@@ -26,7 +26,7 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre =  62473178
+nombre =  62401651
 pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
@@ -88,7 +88,7 @@ elif selection_gain_loss==3:
   loss_minus=2
 
 position_fully_automated=0
-position_partially_automated=0
+position_partially_automated=1
 
 safe_plus=-1
 safe_minus=-1
@@ -343,13 +343,6 @@ class ConTrader:
 
         for s in possible_symbols:
             positions = self.mm.get_positions(s)
-            if correlation_per_name==1:
-                if correlation_inverse==1:
-                    if ((s[-7:] != self.instrument_b[-7:] and s[:3] != self.instrument_b[:3])):
-                        continue
-                else:
-                    if ((s[-7:] == self.instrument_b[-7:] or s[:3] == self.instrument_b[:3])) :
-                        continue
             if positions:
                 p = positions[0]
                 self.instrument = s
@@ -938,7 +931,7 @@ if __name__ == "__main__":
             for t in traders:
                 t.reset()
                 time.sleep(5.0)
-            #break
+            break
         
 
         # keep MT5 session alive / re-init if needed
