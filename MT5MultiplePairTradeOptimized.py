@@ -936,11 +936,12 @@ if __name__ == "__main__":
 
             # correlation maintenance (throttled via trader.corr_interval_s)
             # Pair 1
-            if continuous_corr_calculus!=0:
-                # paires indexées : (0,1), (2,3), (4,5), (6,7)
-                for i in range(0, len(traders), 2):
-                    t1 = traders[i]
-                    t2 = traders[i+1]
+            # paires indexées : (0,1), (2,3), (4,5), (6,7)
+            for i in range(0, len(traders), 2):
+                t1 = traders[i]
+                t2 = traders[i+1]
+
+                if continuous_corr_calculus!=0:
 
                     # liste des autres instruments
                     others = [t.instrument for j, t in enumerate(traders) if j not in (i, i+1)]
@@ -948,12 +949,9 @@ if __name__ == "__main__":
                     # condition
                     if (t1.correlation == 0 and t1.replacement == t1.instrument) or (t2.correlation == 0 and t2.replacement == t2.instrument):
                         correlation_matrix(mm, t1, t2, others, Watch_List)
-
-            for i in range(0, len(traders), 2):
-                t1 = traders[i]
-                t2 = traders[i+1]
-                # propagate counterpart info
+                        
                 t1.place_info(t2); t2.place_info(t1)
+
 
             # emergency changes (use watchlists)
             for t in traders:
@@ -964,7 +962,7 @@ if __name__ == "__main__":
                 # execute decisions
                 if (time.time()-start>time_check_main and no_position_at_start==1) or no_position_at_start==0:
                     t.execute_trades()
-                    
+
                 # allow instrument replacement when safe
                 t.replace_instrument()
 
