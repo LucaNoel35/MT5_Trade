@@ -26,7 +26,7 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre =  62401651
+nombre =  62423488
 pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
@@ -66,10 +66,10 @@ selection_condition_buy_sell=1
 
 selection_gain_loss=1
 
-gain_plus=1
-loss_plus=2
-gain_minus=1
-loss_minus=2
+gain_plus=2
+loss_plus=1
+gain_minus=2
+loss_minus=1
 
 if selection_gain_loss==1:
   gain_plus=2
