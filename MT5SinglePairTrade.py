@@ -825,31 +825,11 @@ if __name__ == "__main__":
     trader7 = ConTrader( trader7_instrument, pip=0.00001,decimal=5,gain=2,loss=1,space=0,pourcentage=global_percentage,weight=Weight7)    
     trader8 = ConTrader( trader8_instrument, pip=0.00001,decimal=5,gain=2,loss=1,space=0,pourcentage=global_percentage,weight=Weight8)    
 
-    trader1.setUnits()    
-    trader2.setUnits() 
+    traders = [trader1,trader2,trader3,trader4,trader5,trader6,trader7,trader8]
 
-    trader3.setUnits()    
-    trader4.setUnits()
-
-    trader5.setUnits()    
-    trader6.setUnits() 
-
-    trader7.setUnits()    
-    trader8.setUnits()
-
-
-    trader1.get_most_recent(sample_number)    
-    trader2.get_most_recent(sample_number)
-
-    trader3.get_most_recent(sample_number)    
-    trader4.get_most_recent(sample_number) 
-
-    trader5.get_most_recent(sample_number)    
-    trader6.get_most_recent(sample_number)
-
-    trader7.get_most_recent(sample_number)    
-    trader8.get_most_recent(sample_number) 
-
+    for t in traders:
+        t.setUnits()
+        t.get_most_recent(sample_number)   
 
     while True:
         now = datetime.now(timezone.utc)
@@ -863,18 +843,10 @@ if __name__ == "__main__":
                 break
         """
 
-        try :         
-            trader1.performTrade()   
-            trader2.performTrade() 
-            
-            trader3.performTrade()   
-            trader4.performTrade()  
+        try :      
 
-            trader5.performTrade()   
-            trader6.performTrade() 
-            
-            trader7.performTrade()   
-            trader8.performTrade()
+            for t in traders:
+                t.performTrade()
     
             if mt5.last_error()[0]!=1:
                 mt5.initialize(login = nombre, password = pwd, server = server_name, path = path_name)
