@@ -26,8 +26,8 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre =  62423488
-pwd = 'Sephiroth35*'
+nombre =  62758578
+pwd = 'uY78qKw!'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 
@@ -64,7 +64,7 @@ low_correlation_value = high_correlation_value/3
 
 selection_condition_buy_sell=1
 
-selection_gain_loss=0
+selection_gain_loss=1
 
 gain_plus=1
 loss_plus=2
@@ -77,12 +77,12 @@ if selection_gain_loss==1:
   gain_minus=1.5
   loss_minus=1.5
 elif selection_gain_loss==2:
-  gain_plus=1.5
+  gain_plus=1
   loss_plus=1
   gain_minus=1
   loss_minus=2
 elif selection_gain_loss==3:
-  gain_plus=2
+  gain_plus=1.5
   loss_plus=1
   gain_minus=1
   loss_minus=2
@@ -93,8 +93,8 @@ position_partially_automated=1
 safe_plus=-1
 safe_minus=-1
 
-inverse_plus=1
-inverse_minus=1
+inverse_plus=-1
+inverse_minus=-1
 
 correlation_per_name=1
 
@@ -742,6 +742,24 @@ class ConTrader:
         if trader_b.instrument != self.instrument_b:
             self.instrument_b = trader_b.instrument
             self.replacement_b = trader_b.instrument
+
+        if self.score>self.score_b:
+            self.gain=gain_plus
+            self.loss=loss_plus
+            self.strat=-1
+            self.strat_close=1
+
+        elif self.score<self.score_b:
+            self.gain=gain_minus
+            self.loss=loss_minus
+            self.strat=1
+            self.strat_close=-1        
+
+        else:
+            self.gain=self.gain_original
+            self.loss=self.loss_original
+            self.strat=self.strat_org
+            self.strat_close=self.strat_close_org                  
 
     def emergency_change_instrument(self, watchlist, used_symbols):
         """
