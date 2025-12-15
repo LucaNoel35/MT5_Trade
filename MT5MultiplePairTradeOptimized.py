@@ -52,8 +52,6 @@ minimal_pip_multiplier = 20
 minimal_avg_pip_multiplier = 25
 
 correlation_number = 60
-correlation_multiplier = 1
-correlation_divider = 1
 
 #correlation inversed (-1) means high risk high reward, and vice versa
 correlation_inverse=1
