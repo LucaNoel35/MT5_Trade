@@ -26,8 +26,8 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre =  62024999
-pwd = 'wkD=Hz#3'
+nombre =  62758578
+pwd = 'Sephiroth35!'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 
@@ -78,9 +78,9 @@ elif selection_gain_loss==2:
   gain_plus=2
   loss_plus=1
   gain_minus=1
-  loss_minus=1
+  loss_minus=1.5
 elif selection_gain_loss==3:
-  gain_plus=2
+  gain_plus=1.5
   loss_plus=1
   gain_minus=1
   loss_minus=2
@@ -586,11 +586,11 @@ class ConTrader:
                     elif (self.config == 1*self.strat_close and self.objectif_reached_buy(self.price) and (self.position_b != -1 or self.safe != -1 or self.correlation == 0)):
                         self.price = self.close; self.count = 0; self.close_position(positions); self.beginning = -1; self.first_run=0
                         if self.space == 0 and position_fully_automated==1: self.previous_position = 1
-                    """
-                    elif (self.objectif_reached_buy(self.price) and self.correlation == 0 and self.config == 1*self.strat_close):
+                    
+                    elif (self.objectif_reached_buy(self.price) and self.correlation == 0 ) and self.position_b==0:
                         self.price = self.close; self.count = 0; self.close_position(positions); self.beginning = -1; self.first_run=0
                         if self.space == 0 and position_fully_automated==1: self.previous_position = 1
-                    """
+                    
             else:  # SELL open
                 cond_ok_spread = ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip) and self.position_b == 1) or self.position_b != 1
                 if selection_condition_buy_sell==1:
@@ -599,17 +599,17 @@ class ConTrader:
                   cond_ok_sell_b = ((self.config_b == -1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == 1*self.strat_close and self.strat_close==self.strat_close_b)) and ((self.instrument_b_obj_reached_buy and self.close*self.inverse <= self.price*self.inverse ) or self.close*self.inverse > self.price*self.inverse)
                   
                 if cond_ok_spread:
-                    if (self.config == -1*self.strat_close and self.objectif_reached_sell(self.price)  and cond_ok_sell_b and (self.position_b == 1 and self.safe == -1 and  self.correlation != 0)):
+                    if (self.config == -1*self.strat_close and self.objectif_reached_sell(self.price)  and cond_ok_sell_b and (self.position_b == 1 and self.safe == -1 and self.correlation != 0)):
                         self.price = self.close; self.count = 0; self.close_position(positions); self.beginning = -1; self.first_run=0
                         if self.space == 0 and position_fully_automated==1: self.previous_position = -1
                     elif (self.config == -1*self.strat_close and self.objectif_reached_sell(self.price) and (self.position_b != 1 or self.safe != -1 or self.correlation == 0)):
                         self.price = self.close; self.count = 0; self.close_position(positions); self.beginning = -1; self.first_run=0
                         if self.space == 0 and position_fully_automated==1: self.previous_position = -1
-                    """
-                    elif (self.objectif_reached_sell(self.price) and self.correlation == 0 and self.config == 1*self.strat_close):
+                    
+                    elif (self.objectif_reached_sell(self.price) and self.correlation == 0 ) and self.position_b==0:
                         self.price = self.close; self.count = 0; self.close_position(positions); self.beginning = -1; self.first_run=0
                         if self.space == 0 and position_fully_automated==1: self.previous_position = -1
-                    """
+                    
         elif len(positions) ==0 :
             # no open position for this symbol
             self.count += 1
