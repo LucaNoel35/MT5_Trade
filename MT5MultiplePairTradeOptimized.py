@@ -62,31 +62,31 @@ low_correlation_value = high_correlation_value/3
 
 selection_condition_buy_sell=1
 
-selection_gain_loss=1
+selection_gain_loss=2
 
 gain_plus=2
 loss_plus=1
-gain_minus=2
-loss_minus=1
+gain_minus=1
+loss_minus=2
 
 if selection_gain_loss==1:
   gain_plus=2
   loss_plus=1
   gain_minus=1.5
-  loss_minus=1.5
+  loss_minus=2
 elif selection_gain_loss==2:
   gain_plus=2
   loss_plus=1
-  gain_minus=1
+  gain_minus=1.5
   loss_minus=1.5
 elif selection_gain_loss==3:
-  gain_plus=1.5
+  gain_plus=2
   loss_plus=1
-  gain_minus=1
-  loss_minus=2
+  gain_minus=1.5
+  loss_minus=1
 
 position_fully_automated=0
-position_partially_automated=1
+position_partially_automated=0
 
 safe_plus=-1
 safe_minus=-1
@@ -575,15 +575,15 @@ class ConTrader:
             if p0.type == 0:  # BUY open
                 cond_ok_spread = ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip) and self.position_b == -1) or self.position_b != -1
                 if selection_condition_buy_sell==1:
-                  cond_ok_buy_b = ((self.instrument_b_obj_reached_sell and self.close*self.inverse >= self.price*self.inverse and ((self.config_b == 1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == -1*self.strat_close and self.strat_close==self.strat_close_b))) or self.close*self.inverse < self.price*self.inverse)
+                  cond_ok_buy_b = ((self.instrument_b_obj_reached_sell and self.close*self.inverse >= self.price*self.inverse and ((self.config_b == -1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == 1*self.strat_close and self.strat_close==self.strat_close_b))) or self.close*self.inverse < self.price*self.inverse)
                 else:
-                  cond_ok_buy_b = ((self.config_b == 1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == -1*self.strat_close and self.strat_close==self.strat_close_b)) and((self.instrument_b_obj_reached_sell and self.close*self.inverse >= self.price*self.inverse ) or self.close*self.inverse < self.price*self.inverse)
+                  cond_ok_buy_b = ((self.config_b == -1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == 1*self.strat_close and self.strat_close==self.strat_close_b)) and((self.instrument_b_obj_reached_sell and self.close*self.inverse >= self.price*self.inverse ) or self.close*self.inverse < self.price*self.inverse)
 
                 if cond_ok_spread:
-                    if (self.config == 1*self.strat_close and self.objectif_reached_buy(self.price) and cond_ok_buy_b and (self.position_b == -1 and self.safe == -1 and self.correlation != 0)):
+                    if (self.config == 1*self.strat_close and self.objectif_reached_buy(self.price) and cond_ok_buy_b and (self.position_b == -1 and self.safe == -1 )):
                         self.price = self.close; self.count = 0; self.close_position(positions); self.beginning = -1; self.first_run=0
                         if self.space == 0 and position_fully_automated==1: self.previous_position = 1
-                    elif (self.config == 1*self.strat_close and self.objectif_reached_buy(self.price) and (self.position_b != -1 or self.safe != -1 or self.correlation == 0)):
+                    elif (self.config == 1*self.strat_close and self.objectif_reached_buy(self.price) and (self.position_b != -1 or self.safe != -1 )):
                         self.price = self.close; self.count = 0; self.close_position(positions); self.beginning = -1; self.first_run=0
                         if self.space == 0 and position_fully_automated==1: self.previous_position = 1
                     
@@ -594,15 +594,15 @@ class ConTrader:
             else:  # SELL open
                 cond_ok_spread = ((self.spread <= minimal_pip_multiplier*self.pip and self.spread_average < minimal_avg_pip_multiplier*self.pip) and self.position_b == 1) or self.position_b != 1
                 if selection_condition_buy_sell==1:
-                  cond_ok_sell_b = ((self.instrument_b_obj_reached_buy and self.close*self.inverse <= self.price*self.inverse and ((self.config_b == -1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == 1*self.strat_close and self.strat_close==self.strat_close_b))) or self.close*self.inverse > self.price*self.inverse)
+                  cond_ok_sell_b = ((self.instrument_b_obj_reached_buy and self.close*self.inverse <= self.price*self.inverse and ((self.config_b == 1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == -1*self.strat_close and self.strat_close==self.strat_close_b))) or self.close*self.inverse > self.price*self.inverse)
                 else:
-                  cond_ok_sell_b = ((self.config_b == -1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == 1*self.strat_close and self.strat_close==self.strat_close_b)) and ((self.instrument_b_obj_reached_buy and self.close*self.inverse <= self.price*self.inverse ) or self.close*self.inverse > self.price*self.inverse)
+                  cond_ok_sell_b = ((self.config_b == 1*self.strat_close and self.strat_close!=self.strat_close_b) or (self.config_b == -1*self.strat_close and self.strat_close==self.strat_close_b)) and ((self.instrument_b_obj_reached_buy and self.close*self.inverse <= self.price*self.inverse ) or self.close*self.inverse > self.price*self.inverse)
                   
                 if cond_ok_spread:
-                    if (self.config == -1*self.strat_close and self.objectif_reached_sell(self.price)  and cond_ok_sell_b and (self.position_b == 1 and self.safe == -1 and self.correlation != 0)):
+                    if (self.config == -1*self.strat_close and self.objectif_reached_sell(self.price)  and cond_ok_sell_b and (self.position_b == 1 and self.safe == -1 )):
                         self.price = self.close; self.count = 0; self.close_position(positions); self.beginning = -1; self.first_run=0
                         if self.space == 0 and position_fully_automated==1: self.previous_position = -1
-                    elif (self.config == -1*self.strat_close and self.objectif_reached_sell(self.price) and (self.position_b != 1 or self.safe != -1 or self.correlation == 0)):
+                    elif (self.config == -1*self.strat_close and self.objectif_reached_sell(self.price) and (self.position_b != 1 or self.safe != -1 )):
                         self.price = self.close; self.count = 0; self.close_position(positions); self.beginning = -1; self.first_run=0
                         if self.space == 0 and position_fully_automated==1: self.previous_position = -1
                     
@@ -742,7 +742,7 @@ class ConTrader:
         self.PL_b = trader_b.PL
         self.instrument_b_obj_reached_buy = trader_b.objectif_reached_buy(trader_b.price)
         self.instrument_b_obj_reached_sell = trader_b.objectif_reached_sell(trader_b.price)
-        if trader_b.instrument != self.instrument_b:
+        if trader_b.instrument != self.instrument_b or self.instrument==self.instrument_b:
             self.instrument_b = trader_b.instrument
             self.replacement_b = trader_b.instrument
 
@@ -775,14 +775,7 @@ class ConTrader:
         # Vérifie s’il y a un doublon d’instrument
         duplicate = self.instrument in used_symbols
 
-        # Vérifie si instrument(s) sont invalides
-        invalid = (
-            self.instrument == self.instrument_b or
-            self.instrument not in watchlist or
-            self.instrument_b not in watchlist
-        )
-
-        if duplicate or invalid:
+        if duplicate :
             # Marque la situation d'urgence
             self.emergency = 1
             self.double_instrument += 1
@@ -875,15 +868,15 @@ if __name__ == "__main__":
     mm.pull_ticks(); mm.pull_positions(); mm.pull_rates()
 
     # Instantiate traders
-    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader2_instrument,quota_gain,-1,1,safe_minus,inverse_minus)
-    trader2 = ConTrader(mm, trader2_instrument, 0.001,3, -1, 1, gain_plus , loss_plus,0, trader1_instrument,quota_gain, 1, -1,safe_plus,inverse_plus)
-    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1,-1, gain_minus,  loss_minus,0, trader4_instrument,quota_gain,-1, -1,safe_minus,inverse_minus)
-    trader4 = ConTrader(mm, trader4_instrument, 0.001,3, -1, 1, gain_plus, loss_plus,0, trader3_instrument,quota_gain, 1,1,safe_plus,inverse_plus)
+    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1, -1, gain_minus,  loss_minus,0, trader2_instrument,quota_gain,-1,1,safe_minus,inverse_minus)
+    trader2 = ConTrader(mm, trader2_instrument, 0.001,3,  -1, 1, gain_plus , loss_plus,0, trader1_instrument,quota_gain, 1, -1,safe_plus,inverse_plus)
+    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1, -1, gain_minus,  loss_minus,0, trader4_instrument,quota_gain,-1, -1,safe_minus,inverse_minus)
+    trader4 = ConTrader(mm, trader4_instrument, 0.001,3,  -1, 1, gain_plus, loss_plus,0, trader3_instrument,quota_gain, 1,1,safe_plus,inverse_plus)
 
-    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader6_instrument,quota_gain, 1,1,safe_minus,inverse_minus)
-    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus,0, trader5_instrument,quota_gain,-1, -1,safe_plus,inverse_plus)
-    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1,-1, gain_minus,  loss_minus,0, trader8_instrument,quota_gain, 1, -1,safe_minus,inverse_minus)
-    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5,-1, 1, gain_plus , loss_plus ,0, trader7_instrument,quota_gain,-1,1,safe_plus,inverse_plus)
+    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1, -1, gain_minus,  loss_minus,0, trader6_instrument,quota_gain, 1,1,safe_minus,inverse_minus)
+    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5, -1, 1, gain_plus , loss_plus,0, trader5_instrument,quota_gain,-1, -1,safe_plus,inverse_plus)
+    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1, -1, gain_minus,  loss_minus,0, trader8_instrument,quota_gain, 1, -1,safe_minus,inverse_minus)
+    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5, -1, 1, gain_plus , loss_plus ,0, trader7_instrument,quota_gain,-1,1,safe_plus,inverse_plus)
 
     traders = [trader1, trader2, trader3, trader4, trader5, trader6, trader7, trader8]
 
