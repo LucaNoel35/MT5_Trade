@@ -66,8 +66,8 @@ selection_gain_loss=2
 
 gain_plus=2
 loss_plus=1
-gain_minus=1
-loss_minus=2
+gain_minus=2
+loss_minus=1
 
 if selection_gain_loss==1:
   gain_plus=2
