@@ -124,14 +124,31 @@ trader3_instrument='CADJPY.pro'
 trader4_instrument='AUDJPY.pro'
 
 # Add more if needed (watch list 2)
-trader5_instrument='EURUSD.pro'
-trader6_instrument='GBPUSD.pro'
-trader7_instrument='AUDUSD.pro'
-trader8_instrument='NZDUSD.pro'
+trader5_instrument='GBPJPY.pro'
+trader6_instrument='CHFJPY.pro'
+trader7_instrument='EURUSD.pro'
+trader8_instrument='GBPUSD.pro'
 
 # =========================
 # ==== MARKET MANAGER =====
 # =========================
+
+def split_symbol(symbol: str):
+    """
+    Ex: 'EURJPY.pro' -> ('EUR', 'JPY')
+    """
+    clean = symbol.replace('.pro', '')
+    return clean[:3], clean[3:6]
+
+def has_common_currency(sym1: str, sym2: str):
+    b1, q1 = split_symbol(sym1)
+    b2, q2 = split_symbol(sym2)
+    return b1 == b2 or q1 == q2
+
+def has_different_currency(sym1: str, sym2: str):
+    b1, q1 = split_symbol(sym1)
+    b2, q2 = split_symbol(sym2)
+    return b1 != b2 and q1 != q2
 
 class MarketManager:
     """Centralizes *all* MT5 calls. Traders consume cached data only."""
@@ -337,9 +354,25 @@ class ConTrader:
         balance = account_info.balance if account_info else 0
         self.original_balance = balance
 
-        # Vérifie les positions existantes sur symboles non déjà attribués
-        possible_symbols = [s for s in watchlist if s not in ConTrader.assigned_symbols_global]
+        # Symboles non encore assignés
+        possible_symbols = [
+            s for s in watchlist
+            if s not in ConTrader.assigned_symbols_global
+        ]
 
+        # 🔥 NOUVEAU : même currency que l’instrument actuel
+        if self.instrument and correlation_per_name==1 and correlation_inverse==1:
+            possible_symbols = [
+                s for s in possible_symbols
+                if has_common_currency(s, self.instrument)
+            ]
+        elif self.instrument and correlation_per_name==1 and correlation_inverse==-1:
+            possible_symbols = [
+                s for s in possible_symbols
+                if has_different_currency(s, self.instrument)
+            ]
+
+        # Positions existantes
         for s in possible_symbols:
             positions = self.mm.get_positions(s)
             if positions:
@@ -351,13 +384,16 @@ class ConTrader:
                 self.units = p.volume
                 self.initial_units = self.units
                 self._set_pip_decimal(self.instrument)
-                print(f"{self.instrument} assigned from existing position, lots={self.units}")
                 self.first_run = 0
+
                 ConTrader.assigned_symbols_global.add(self.instrument)
+                print(f"{self.instrument} assigned (same currency), lots={self.units}")
                 return
 
+        # Fallback sizing
         hedge_fac = hedge_factor if self.hedge == -1 else 1
         lots = max(round((math.floor(((balance / 100000) * self.leverage) * 100)) / 100, 2), 0.01)
+
         self.units = round(hedge_fac * lots, 2)
         self.initial_units = self.units
         self.position = 0
@@ -365,8 +401,9 @@ class ConTrader:
         self.price = None
         self._set_pip_decimal(self.instrument)
 
-        print(f"{self.instrument} no existing position, lots={self.units}")
         ConTrader.assigned_symbols_global.add(self.instrument)
+        print(f"{self.instrument} no existing position, lots={self.units}")
+
 
     # ---------- Helper pour assigner decimal/pip ----------
     def _set_pip_decimal(self, instrument):
@@ -766,42 +803,47 @@ class ConTrader:
                 self.strat_close=self.strat_close_org                  
 
     def emergency_change_instrument(self, watchlist, used_symbols):
-        """
-        Détecte et corrige les cas où un trader utilise le même instrument qu'un autre.
-        - watchlist : liste complète des symboles disponibles
-        - used_symbols : liste (ou set) des instruments déjà utilisés par d'autres traders
-        """
 
-        # Vérifie s’il y a un doublon d’instrument
         duplicate = self.instrument in used_symbols
 
-        if duplicate :
-            # Marque la situation d'urgence
+        if duplicate:
             self.emergency = 1
             self.double_instrument += 1
 
-            # Choisir un nouveau symbole unique
-            available = [s for s in watchlist if s not in used_symbols and s != self.instrument]
+            # 🔥 instruments libres ET currency commune
+            if correlation_inverse==1:
+                available = [
+                    s for s in watchlist
+                    if s not in used_symbols
+                    and s != self.instrument
+                    and has_common_currency(s, self.instrument)
+                ]
+            else:
+                available = [
+                    s for s in watchlist
+                    if s not in used_symbols
+                    and s != self.instrument
+                    and has_different_currency(s, self.instrument)
+                ]                
+
             if available:
                 self.replacement = random.choice(available)
-                print(f"[⚠️ EMERGENCY] {self.instrument} doublon détecté — remplacement par {self.replacement}")
+                print(
+                    f"[⚠️ EMERGENCY] {self.instrument} doublon — "
+                    f"remplacement currency-linked → {self.replacement}"
+                )
                 self.replace_instrument()
             else:
-                print(f"[⚠️ EMERGENCY] {self.instrument} doublon détecté mais aucun instrument libre disponible.")
+                print(
+                    f"[⚠️ EMERGENCY] {self.instrument} doublon "
+                    f"mais aucun instrument compatible currency disponible."
+                )
         else:
-            # Aucun problème
             if self.emergency:
-                print(f"[✅ STABLE] {self.instrument} est à nouveau unique et valide.")
+                print(f"[✅ STABLE] {self.instrument} est à nouveau unique.")
             self.emergency = 0
             self.double_instrument = 0
 
-
-    def random_change_instrument(self, Watchlist, ls):
-        if self.position == 0:
-            temp = random.choice(Watchlist)
-            if temp not in ls:
-                self.replacement = temp
-                self.replace_instrument()
 
 
 # =========================
