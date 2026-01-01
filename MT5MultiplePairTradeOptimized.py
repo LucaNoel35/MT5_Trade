@@ -474,7 +474,7 @@ class ConTrader:
         else:
             max_corr_index = corr_df.where(corr_df < 1).stack().idxmax()
             corr = corr_df.loc[max_corr_index]
-            self.correlation = 1 if (corr*correlation_inverse > low_correlation_value*correlation_inverse and (self.instrument != self.instrument_b)) or continuous_corr_calculus==0 else 0
+            self.correlation = 1 if ((corr*correlation_inverse > low_correlation_value*correlation_inverse and (self.instrument != self.instrument_b)) or continuous_corr_calculus==0) and  self.emergency==0 else 0
         self._last_corr_check = now
 
     def highly_correlate(self):
@@ -600,7 +600,7 @@ class ConTrader:
                 self.price = self.close
                 return
             
-            if self.double_instrument>time_check_double and self.position!=0 and ((p0.type == 0 and self.objectif_reached_buy(self.price)) or (p0.type != 0 and self.objectif_reached_sell(self.price))):
+            if self.emergency==1 and self.double_instrument>time_check_double and self.position!=0 and ((p0.type == 0 and self.objectif_reached_buy(self.price)) or (p0.type != 0 and self.objectif_reached_sell(self.price))):
                 self.close_position(positions)
                 self.price = self.close
                 return       
@@ -718,7 +718,7 @@ class ConTrader:
         self.beginning=self.beginning_origin      
         self.initialize=self.initialize_origin
         self.first_run=self.first_run_origin
-        self.double_instrument=1
+        self.double_instrument=0
 
     def close_position(self, positions):
         if not positions:
@@ -827,12 +827,10 @@ class ConTrader:
                 ]                
 
             if available:
-                self.replacement = random.choice(available)
                 print(
                     f"[⚠️ EMERGENCY] {self.instrument} doublon — "
                     f"remplacement currency-linked → {self.replacement}"
                 )
-                self.replace_instrument()
             else:
                 print(
                     f"[⚠️ EMERGENCY] {self.instrument} doublon "
