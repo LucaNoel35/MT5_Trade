@@ -86,7 +86,7 @@ elif selection_gain_loss==3:
   loss_minus=1
 
 position_fully_automated=0
-position_partially_automated=0
+position_partially_automated=1
 
 safe_plus=-1
 safe_minus=-1
@@ -829,12 +829,12 @@ class ConTrader:
             if available:
                 print(
                     f"[⚠️ EMERGENCY] {self.instrument} doublon — "
-                    f"remplacement currency-linked → {self.replacement}"
+                    f"remplacement disponible"
                 )
             else:
                 print(
                     f"[⚠️ EMERGENCY] {self.instrument} doublon "
-                    f"mais aucun instrument compatible currency disponible."
+                    f"mais aucun instrument compatible disponible."
                 )
         else:
             if self.emergency:
