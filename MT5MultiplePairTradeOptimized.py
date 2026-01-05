@@ -578,6 +578,11 @@ class ConTrader:
             self.last_bar = self.raw_data.index[-1]
             phrasing="\n {} {} {} correlation {} gain {} loss {} strat {} hedge {} position {} position_b {}\n".format(self.last_bar, self.instrument, self.instrument_b, self.correlation , self.gain, self.loss , self.strat, self.hedge , self.position, self.position_b)             
             print(phrasing)
+            
+            if self.emergency==1:
+                print(
+                    f"[⚠️ EMERGENCY] {self.instrument} doublon — "
+                )
 
         # Trading windows
         def within_quiet_hours():
@@ -748,7 +753,7 @@ class ConTrader:
     # ---------- pairing & maintenance ----------
     def replace_instrument(self):
         # adjust decimals/pips when switching
-        if self.position==0 and ((self.correlation==0) or (self.emergency==1)) and (self.replacement!=self.instrument) :
+        if self.position==0 and (self.correlation==0) and (self.replacement!=self.instrument) :
             self.instrument = self.replacement
             self._set_pip_decimal(self.instrument)
             self.replaced = 1
@@ -810,32 +815,6 @@ class ConTrader:
             self.emergency = 1
             self.double_instrument += 1
 
-            # 🔥 instruments libres ET currency commune
-            if correlation_inverse==1:
-                available = [
-                    s for s in watchlist
-                    if s not in used_symbols
-                    and s != self.instrument
-                    and has_common_currency(s, self.instrument)
-                ]
-            else:
-                available = [
-                    s for s in watchlist
-                    if s not in used_symbols
-                    and s != self.instrument
-                    and has_different_currency(s, self.instrument)
-                ]                
-
-            if available:
-                print(
-                    f"[⚠️ EMERGENCY] {self.instrument} doublon — "
-                    f"remplacement disponible"
-                )
-            else:
-                print(
-                    f"[⚠️ EMERGENCY] {self.instrument} doublon "
-                    f"mais aucun instrument compatible disponible."
-                )
         else:
             if self.emergency:
                 print(f"[✅ STABLE] {self.instrument} est à nouveau unique.")
