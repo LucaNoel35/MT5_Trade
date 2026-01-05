@@ -578,7 +578,7 @@ class ConTrader:
             self.last_bar = self.raw_data.index[-1]
             phrasing="\n {} {} {} correlation {} gain {} loss {} strat {} hedge {} position {} position_b {}\n".format(self.last_bar, self.instrument, self.instrument_b, self.correlation , self.gain, self.loss , self.strat, self.hedge , self.position, self.position_b)             
             print(phrasing)
-            
+
             if self.emergency==1:
                 print(
                     f"[⚠️ EMERGENCY] {self.instrument} doublon — "
@@ -865,8 +865,6 @@ def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader
             max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmax())
         elif trader1.position == 0 and trader2.position != 0:
             max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmax(), trader2.instrument)
-        else:
-            max_corr_index = corr.where(corr < 1).stack().idxmax()
     else:
         if trader1.position == 0 and trader2.position == 0:
             max_corr_index = corr.where(corr < 1).stack().idxmin()
@@ -874,8 +872,6 @@ def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader
             max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmin())
         elif trader1.position == 0 and trader2.position != 0:
             max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmin(), trader2.instrument)
-        else:
-            max_corr_index = corr.where(corr < 1).stack().idxmin()
 
     trader1.replace(max_corr_index[0], max_corr_index[1], ls)
     trader2.replace(max_corr_index[1], max_corr_index[0], ls)
