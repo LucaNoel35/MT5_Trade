@@ -869,20 +869,34 @@ def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader
         if correlation_inverse==1:
             for i in corr.index:
                 for j in corr.columns:
-                    if ((i[-7:] != j[-7:] and i[:3] != j[:3])) or (i in ls or j in ls):
+                    if (has_different_currency(i,j)) or (i in ls or j in ls):
                         corr.at[i, j] = np.nan
 
         else:
             for i in corr.index:
                 for j in corr.columns:
-                    if ((i[-7:] == j[-7:] or i[:3] == j[:3])) or (i in ls or j in ls):
+                    if (has_common_currency(i,j)) or (i in ls or j in ls):
                         corr.at[i, j] = np.nan    
     
                 
     if correlation_inverse==1:
-        max_corr_index = corr.where(corr < 1).stack().idxmax()
+        if trader1.position == 0 and trader2.position == 0:
+            max_corr_index = corr.where(corr < 1).stack().idxmax()
+        elif trader1.position != 0 and trader2.position == 0:
+            max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmax())
+        elif trader1.position == 0 and trader2.position != 0:
+            max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmax(), trader2.instrument)
+        else:
+            max_corr_index = corr.where(corr < 1).stack().idxmax()
     else:
-        max_corr_index = corr.where(corr < 1).stack().idxmin()
+        if trader1.position == 0 and trader2.position == 0:
+            max_corr_index = corr.where(corr < 1).stack().idxmin()
+        elif trader1.position != 0 and trader2.position == 0:
+            max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmin())
+        elif trader1.position == 0 and trader2.position != 0:
+            max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmin(), trader2.instrument)
+        else:
+            max_corr_index = corr.where(corr < 1).stack().idxmin()
 
     trader1.replace(max_corr_index[0], max_corr_index[1], ls)
     trader2.replace(max_corr_index[1], max_corr_index[0], ls)
