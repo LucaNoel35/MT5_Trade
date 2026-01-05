@@ -857,7 +857,7 @@ def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader
                     if (has_common_currency(i,j)) or (i in ls or j in ls):
                         corr.at[i, j] = np.nan    
     
-                
+    max_corr_index = None
     if correlation_inverse==1:
         if trader1.position == 0 and trader2.position == 0:
             max_corr_index = corr.where(corr < 1).stack().idxmax()
@@ -873,8 +873,9 @@ def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader
         elif trader1.position == 0 and trader2.position != 0:
             max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmin(), trader2.instrument)
 
-    trader1.replace(max_corr_index[0], max_corr_index[1], ls)
-    trader2.replace(max_corr_index[1], max_corr_index[0], ls)
+    if max_corr_index != None:
+        trader1.replace(max_corr_index[0], max_corr_index[1], ls)
+        trader2.replace(max_corr_index[1], max_corr_index[0], ls)
 
 
 # =========================
