@@ -62,28 +62,28 @@ low_correlation_value = high_correlation_value/3
 
 selection_condition_buy_sell=1
 
-selection_gain_loss=2
+selection_gain_loss=3
 
-gain_plus=2
+gain_plus=1
 loss_plus=1
-gain_minus=2
+gain_minus=1
 loss_minus=1
 
 if selection_gain_loss==1:
-  gain_plus=2
-  loss_plus=1
-  gain_minus=1.5
+  gain_plus=1
+  loss_plus=2
+  gain_minus=1
   loss_minus=2
 elif selection_gain_loss==2:
-  gain_plus=2
+  gain_plus=1.5
   loss_plus=1
-  gain_minus=1.5
-  loss_minus=1.5
+  gain_minus=1
+  loss_minus=2
 elif selection_gain_loss==3:
   gain_plus=2
   loss_plus=1
   gain_minus=1.5
-  loss_minus=1
+  loss_minus=1.5
 
 position_fully_automated=0
 position_partially_automated=1
@@ -542,10 +542,11 @@ class ConTrader:
         if self.replaced == 1:
             self.price = self.close
             self.replaced =0
-
+        """
         # counterpart info from paired trader (set by place_info)
         # correlation check throttled
         self.correlate()
+        """
 
         # positions from cache
         positions = self.mm.get_positions(self.instrument)
@@ -989,11 +990,10 @@ if __name__ == "__main__":
                 # Liste des instruments utilisés par les autres traders
                 used_by_others = [x.instrument for x in traders if x is not t]
                 t.emergency_change_instrument(Watch_List, used_by_others)
-
+                t.correlate()
                 # execute decisions
                 if (time.time()-start>time_check_main and no_position_at_start==1) or no_position_at_start==0:
                     t.execute_trades()
-
                 # allow instrument replacement when safe
                 t.replace_instrument()
 
