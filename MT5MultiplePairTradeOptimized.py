@@ -339,12 +339,10 @@ class ConTrader:
         self._last_corr_check = 0.0
         self.corr_interval_s = 10.0  # check correlation at most every 10s
 
-
         self.emergency=0
         self.double_instrument=0
         self.first_run=first_run
         self.first_run_origin = first_run
-
 
 
     # ---------- utils ----------
@@ -385,7 +383,6 @@ class ConTrader:
                 self.initial_units = self.units
                 self._set_pip_decimal(self.instrument)
                 self.first_run = 0
-
                 ConTrader.assigned_symbols_global.add(self.instrument)
                 print(f"{self.instrument} assigned (same currency), lots={self.units}")
                 return
