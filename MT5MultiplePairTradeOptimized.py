@@ -65,9 +65,9 @@ selection_condition_buy_sell=1
 selection_gain_loss=2
 
 gain_plus=1
-loss_plus=1
+loss_plus=2
 gain_minus=1
-loss_minus=1
+loss_minus=2
 
 if selection_gain_loss==1:
   gain_plus=1
@@ -86,10 +86,10 @@ elif selection_gain_loss==3:
   loss_minus=1.5
 
 position_fully_automated=0
-position_partially_automated=0
+position_partially_automated=1
 
-safe_plus=-1
-safe_minus=1
+safe_plus=1
+safe_minus=-1
 
 inverse_plus=-1
 inverse_minus=1
@@ -976,7 +976,9 @@ if __name__ == "__main__":
                 if continuous_corr_calculus!=0:
 
                     # liste des autres instruments
-                    others = [t.instrument for j, t in enumerate(traders) if j not in (i, i+1)]
+                    others_instrument= [t.instrument for j, t in enumerate(traders) if j not in (i, i+1)]
+                    others_replacement = [t.replacement for j, t in enumerate(traders) if j not in (i, i+1)]
+                    others=others_instrument+others_replacement
 
                     # condition
                     if (t1.correlation == 0 and t1.replacement == t1.instrument) or (t2.correlation == 0 and t2.replacement == t2.instrument):
