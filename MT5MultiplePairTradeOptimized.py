@@ -26,8 +26,8 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre =  62758578
-pwd = 'Sephiroth35!'
+nombre =  62024999
+pwd = 'Lucaevan2967*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 
@@ -62,7 +62,7 @@ low_correlation_value = high_correlation_value/3
 
 selection_condition_buy_sell=1
 
-selection_gain_loss=2
+selection_gain_loss=3
 
 gain_plus=1
 loss_plus=2
@@ -88,11 +88,11 @@ elif selection_gain_loss==3:
 position_fully_automated=0
 position_partially_automated=1
 
-safe_plus=1
+safe_plus=-1
 safe_minus=-1
 
 inverse_plus=-1
-inverse_minus=1
+inverse_minus=-1
 
 correlation_per_name=1
 use_scoring=0
@@ -978,6 +978,7 @@ if __name__ == "__main__":
                     # liste des autres instruments
                     others_instrument= [t.instrument for j, t in enumerate(traders) if j not in (i, i+1)]
                     others_replacement = [t.replacement for j, t in enumerate(traders) if j not in (i, i+1)]
+
                     others=others_instrument+others_replacement
 
                     # condition
