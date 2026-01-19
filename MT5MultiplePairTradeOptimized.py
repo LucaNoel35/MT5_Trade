@@ -69,7 +69,13 @@ loss_plus=1
 gain_minus=2
 loss_minus=1
 
-if selection_gain_loss==1:
+
+if selection_gain_loss==0:
+  gain_plus=1
+  loss_plus=1
+  gain_minus=1
+  loss_minus=2
+elif selection_gain_loss==1:
   gain_plus=1.5
   loss_plus=1
   gain_minus=1
