@@ -26,8 +26,8 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre =  62024999
-pwd = 'Lucaevan2967*'
+nombre =  62758578
+pwd = 'Sephiroth35!'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 
@@ -54,7 +54,7 @@ minimal_avg_pip_multiplier = 25
 correlation_number = 60
 
 #correlation inversed (-1) means high risk high reward, and vice versa
-correlation_inverse=1
+correlation_inverse=-1
 continuous_corr_calculus=1
 
 high_correlation_value = 0.75
@@ -62,37 +62,38 @@ low_correlation_value = high_correlation_value/3
 
 selection_condition_buy_sell=1
 
-selection_gain_loss=3
+selection_gain_loss=1
 
 gain_plus=1
-loss_plus=2
+loss_plus=1
 gain_minus=1
 loss_minus=2
 
 if selection_gain_loss==1:
-  gain_plus=1
-  loss_plus=2
-  gain_minus=1
-  loss_minus=2
-elif selection_gain_loss==2:
   gain_plus=1.5
   loss_plus=1
   gain_minus=1
   loss_minus=2
+elif selection_gain_loss==2:
+  gain_plus=2
+  loss_plus=1.5
+  gain_minus=1
+  loss_minus=1.5
 elif selection_gain_loss==3:
   gain_plus=2
   loss_plus=1
-  gain_minus=1.5
-  loss_minus=1.5
+  gain_minus=1
+  loss_minus=2
+
 
 position_fully_automated=0
 position_partially_automated=1
 
-safe_plus=-1
+safe_plus=1
 safe_minus=-1
 
-inverse_plus=-1
-inverse_minus=-1
+inverse_plus=0
+inverse_minus=0
 
 correlation_per_name=1
 use_scoring=0
@@ -816,6 +817,44 @@ class ConTrader:
             self.emergency = 1
             self.double_instrument += 1
 
+            available = None
+            # 🔥 instruments libres ET currency commune
+            if correlation_inverse == 1 and correlation_per_name==1:
+                available = [
+                    s for s in watchlist
+                    if s not in used_symbols
+                    and s != self.instrument
+                    and has_common_currency(s, self.instrument)
+                ]
+
+            elif correlation_inverse == -1 and correlation_per_name==1:
+                available = [
+                    s for s in watchlist
+                    if s not in used_symbols
+                    and s != self.instrument
+                    and has_different_currency(s, self.instrument)
+                ]
+
+            else:
+                available = [
+                    s for s in watchlist
+                    if s not in used_symbols
+                    and s != self.instrument
+                ]
+
+
+            if available!=None:
+                self.replacement = random.choice(available)
+                print(
+                    f"[⚠️ EMERGENCY] {self.instrument} doublon — "
+                    f"remplacement currency-linked → {self.replacement}"
+                )
+                self.replace_instrument()
+            else:
+                print(
+                    f"[⚠️ EMERGENCY] {self.instrument} doublon "
+                    f"mais aucun instrument compatible currency disponible."
+                )
         else:
             if self.emergency:
                 print(f"[✅ STABLE] {self.instrument} est à nouveau unique.")
@@ -856,23 +895,14 @@ def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader
             for i in corr.index:
                 for j in corr.columns:
                     if (has_common_currency(i,j)) or (i in ls or j in ls):
-                        corr.at[i, j] = np.nan    
-    
+                        corr.at[i, j] = np.nan   
+
     max_corr_index = None
     if correlation_inverse==1:
-        if trader1.position == 0 and trader2.position == 0:
-            max_corr_index = corr.where(corr < 1).stack().idxmax()
-        elif trader1.position != 0 and trader2.position == 0:
-            max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmax())
-        elif trader1.position == 0 and trader2.position != 0:
-            max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmax(), trader2.instrument)
+        max_corr_index = corr.where(corr < 1).stack().idxmax()
     else:
-        if trader1.position == 0 and trader2.position == 0:
-            max_corr_index = corr.where(corr < 1).stack().idxmin()
-        elif trader1.position != 0 and trader2.position == 0:
-            max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmin())
-        elif trader1.position == 0 and trader2.position != 0:
-            max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmin(), trader2.instrument)
+        max_corr_index = corr.where(corr < 1).stack().idxmin()
+
 
     if max_corr_index != None:
         trader1.replace(max_corr_index[0], max_corr_index[1], ls)
@@ -971,23 +1001,23 @@ if __name__ == "__main__":
             # paires indexées : (0,1), (2,3), (4,5), (6,7)
             for i in range(0, len(traders), 2):
                 t1 = traders[i]
-                t2 = traders[i+1]
-
+                t2 = traders[i+1]                
                 if continuous_corr_calculus!=0:
 
                     # liste des autres instruments
+                    """
                     others_instrument= [t.instrument for j, t in enumerate(traders) if j not in (i, i+1)]
                     others_replacement = [t.replacement for j, t in enumerate(traders) if j not in (i, i+1)]
 
                     others=others_instrument+others_replacement
+                    """
+                    others= [t.instrument for j, t in enumerate(traders) if j not in (i, i+1)]
 
                     # condition
                     if (t1.correlation == 0 and t1.replacement == t1.instrument) or (t2.correlation == 0 and t2.replacement == t2.instrument):
                         correlation_matrix(mm, t1, t2, others, Watch_List)
                         
                 t1.place_info(t2); t2.place_info(t1)
-
-
             # emergency changes (use watchlists)
             for t in traders:
                 # Liste des instruments utilisés par les autres traders
