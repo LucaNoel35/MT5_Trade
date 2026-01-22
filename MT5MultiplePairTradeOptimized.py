@@ -1,3 +1,4 @@
+
 """
 Optimized MT5 multi-pair trading bot
 - Centralized market/tick cache (1 call per symbol per loop)
@@ -26,8 +27,8 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre =  62758578
-pwd = 'Sephiroth35!'
+nombre =  62903949
+pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 
@@ -54,7 +55,7 @@ minimal_avg_pip_multiplier = 25
 correlation_number = 60
 
 #correlation inversed (-1) means high risk high reward, and vice versa
-correlation_inverse=-1
+correlation_inverse=1
 continuous_corr_calculus=1
 
 high_correlation_value = 0.75
@@ -62,12 +63,15 @@ low_correlation_value = high_correlation_value/3
 
 selection_condition_buy_sell=1
 
-selection_gain_loss=1
+selection_gain_loss=-1
 
-gain_plus=2
-loss_plus=1
-gain_minus=2
-loss_minus=1
+
+space_global=0
+
+gain_plus=1
+loss_plus=2
+gain_minus=1
+loss_minus=2
 
 
 if selection_gain_loss==0:
@@ -98,12 +102,11 @@ position_partially_automated=1
 safe_plus=1
 safe_minus=-1
 
-inverse_plus=0
-inverse_minus=0
+inverse_plus=1
+inverse_minus=-1
 
 correlation_per_name=1
 use_scoring=0
-
 
 # Time to wait to check double instrument in s
 time_check_double = 5.0
@@ -840,7 +843,7 @@ class ConTrader:
                     and s != self.instrument
                     and has_different_currency(s, self.instrument)
                 ]
-
+  
             else:
                 available = [
                     s for s in watchlist
@@ -850,12 +853,18 @@ class ConTrader:
 
 
             if available!=None:
-                self.replacement = random.choice(available)
-                print(
-                    f"[⚠️ EMERGENCY] {self.instrument} doublon — "
-                    f"remplacement currency-linked → {self.replacement}"
-                )
-                self.replace_instrument()
+                if len(available)!=0:
+                    self.replacement = random.choice(available)
+                    print(
+                        f"[⚠️ EMERGENCY] {self.instrument} doublon — "
+                        f"remplacement currency-linked → {self.replacement}"
+                    )
+                    self.replace_instrument()
+                else:
+                    print(
+                        f"[⚠️ EMERGENCY] {self.instrument} doublon — "
+                        f"mais aucun instrument compatible currency disponible"
+                    )                    
             else:
                 print(
                     f"[⚠️ EMERGENCY] {self.instrument} doublon "
@@ -904,6 +913,7 @@ def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader
                         corr.at[i, j] = np.nan   
 
     max_corr_index = None
+
     if correlation_inverse==1:
         max_corr_index = corr.where(corr < 1).stack().idxmax()
     else:
@@ -935,15 +945,15 @@ if __name__ == "__main__":
     mm.pull_ticks(); mm.pull_positions(); mm.pull_rates()
 
     # Instantiate traders
-    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1, -1, gain_minus,  loss_minus,0, trader2_instrument,quota_gain,-1,1,safe_minus,inverse_minus)
-    trader2 = ConTrader(mm, trader2_instrument, 0.001,3,  -1, 1, gain_plus , loss_plus,0, trader1_instrument,quota_gain, 1, -1,safe_plus,inverse_plus)
-    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1, -1, gain_minus,  loss_minus,0, trader4_instrument,quota_gain,-1, -1,safe_minus,inverse_minus)
-    trader4 = ConTrader(mm, trader4_instrument, 0.001,3,  -1, 1, gain_plus, loss_plus,0, trader3_instrument,quota_gain, 1,1,safe_plus,inverse_plus)
+    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1, -1, gain_minus,  loss_minus,space_global, trader2_instrument,quota_gain,-1,1,safe_minus,inverse_minus)
+    trader2 = ConTrader(mm, trader2_instrument, 0.001,3,  1, -1, gain_plus , loss_plus,space_global, trader1_instrument,quota_gain, 1, -1,safe_plus,inverse_plus)
+    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1, -1, gain_minus,  loss_minus,space_global, trader4_instrument,quota_gain,-1, -1,safe_minus,inverse_minus)
+    trader4 = ConTrader(mm, trader4_instrument, 0.001,3,  1, -1, gain_plus, loss_plus,space_global, trader3_instrument,quota_gain, 1,1,safe_plus,inverse_plus)
 
-    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1, -1, gain_minus,  loss_minus,0, trader6_instrument,quota_gain, 1,1,safe_minus,inverse_minus)
-    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5, -1, 1, gain_plus , loss_plus,0, trader5_instrument,quota_gain,-1, -1,safe_plus,inverse_plus)
-    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1, -1, gain_minus,  loss_minus,0, trader8_instrument,quota_gain, 1, -1,safe_minus,inverse_minus)
-    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5, -1, 1, gain_plus , loss_plus ,0, trader7_instrument,quota_gain,-1,1,safe_plus,inverse_plus)
+    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1, -1, gain_minus,  loss_minus,space_global, trader6_instrument,quota_gain, 1,1,safe_minus,inverse_minus)
+    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5, 1, -1, gain_plus , loss_plus,space_global, trader5_instrument,quota_gain,-1, -1,safe_plus,inverse_plus)
+    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1, -1, gain_minus,  loss_minus,space_global, trader8_instrument,quota_gain, 1, -1,safe_minus,inverse_minus)
+    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5, 1, -1, gain_plus , loss_plus ,space_global, trader7_instrument,quota_gain,-1,1,safe_plus,inverse_plus)
 
     traders = [trader1, trader2, trader3, trader4, trader5, trader6, trader7, trader8]
 
@@ -1005,18 +1015,14 @@ if __name__ == "__main__":
             # correlation maintenance (throttled via trader.corr_interval_s)
             # Pair 1
             # paires indexées : (0,1), (2,3), (4,5), (6,7)
+
+            print('here')
             for i in range(0, len(traders), 2):
                 t1 = traders[i]
                 t2 = traders[i+1]                
                 if continuous_corr_calculus!=0:
 
                     # liste des autres instruments
-                    """
-                    others_instrument= [t.instrument for j, t in enumerate(traders) if j not in (i, i+1)]
-                    others_replacement = [t.replacement for j, t in enumerate(traders) if j not in (i, i+1)]
-
-                    others=others_instrument+others_replacement
-                    """
                     others= [t.instrument for j, t in enumerate(traders) if j not in (i, i+1)]
 
                     # condition
