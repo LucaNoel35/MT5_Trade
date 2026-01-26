@@ -55,7 +55,7 @@ minimal_avg_pip_multiplier = 25
 correlation_number = 60
 
 #correlation inversed (-1) means high risk high reward, and vice versa
-correlation_inverse=1
+correlation_inverse=-1
 continuous_corr_calculus=1
 
 high_correlation_value = 0.75
@@ -63,7 +63,7 @@ low_correlation_value = high_correlation_value/3
 
 selection_condition_buy_sell=1
 
-selection_gain_loss=-1
+selection_gain_loss=2
 
 
 space_global=0
@@ -75,10 +75,10 @@ loss_minus=2
 
 
 if selection_gain_loss==0:
-  gain_plus=1
+  gain_plus=2
   loss_plus=1
   gain_minus=1
-  loss_minus=2
+  loss_minus=1
 elif selection_gain_loss==1:
   gain_plus=1.5
   loss_plus=1
