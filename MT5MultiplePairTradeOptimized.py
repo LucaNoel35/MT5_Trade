@@ -63,37 +63,37 @@ low_correlation_value = high_correlation_value/3
 
 selection_condition_buy_sell=1
 
-selection_gain_loss=2
+selection_gain_loss=1
 
 
 space_global=0
 
-gain_plus=1
-loss_plus=2
-gain_minus=1
-loss_minus=2
+gain_plus=2
+loss_plus=1
+gain_minus=2
+loss_minus=1
 
 
 if selection_gain_loss==0:
-  gain_plus=2
+  gain_plus=1.5
   loss_plus=1
   gain_minus=1
-  loss_minus=1
+  loss_minus=2
 elif selection_gain_loss==1:
-  gain_plus=1.5
+  gain_plus=2
   loss_plus=1
   gain_minus=1
   loss_minus=2
 elif selection_gain_loss==2:
   gain_plus=2
+  loss_plus=1
+  gain_minus=1
+  loss_minus=1
+elif selection_gain_loss==3:
+  gain_plus=2
   loss_plus=1.5
   gain_minus=1
   loss_minus=1.5
-elif selection_gain_loss==3:
-  gain_plus=2
-  loss_plus=1
-  gain_minus=1
-  loss_minus=2
 
 
 position_fully_automated=0
@@ -102,8 +102,8 @@ position_partially_automated=1
 safe_plus=1
 safe_minus=-1
 
-inverse_plus=1
-inverse_minus=-1
+inverse_plus=0
+inverse_minus=0
 
 correlation_per_name=1
 use_scoring=0
@@ -946,14 +946,14 @@ if __name__ == "__main__":
 
     # Instantiate traders
     trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1, -1, gain_minus,  loss_minus,space_global, trader2_instrument,quota_gain,-1,1,safe_minus,inverse_minus)
-    trader2 = ConTrader(mm, trader2_instrument, 0.001,3,  1, -1, gain_plus , loss_plus,space_global, trader1_instrument,quota_gain, 1, -1,safe_plus,inverse_plus)
+    trader2 = ConTrader(mm, trader2_instrument, 0.001,3,  -1, 1, gain_plus , loss_plus,space_global, trader1_instrument,quota_gain, 1, -1,safe_plus,inverse_plus)
     trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1, -1, gain_minus,  loss_minus,space_global, trader4_instrument,quota_gain,-1, -1,safe_minus,inverse_minus)
-    trader4 = ConTrader(mm, trader4_instrument, 0.001,3,  1, -1, gain_plus, loss_plus,space_global, trader3_instrument,quota_gain, 1,1,safe_plus,inverse_plus)
+    trader4 = ConTrader(mm, trader4_instrument, 0.001,3,  -1, 1, gain_plus, loss_plus,space_global, trader3_instrument,quota_gain, 1,1,safe_plus,inverse_plus)
 
-    trader5 = ConTrader(mm, trader5_instrument, 0.00001,5, 1, -1, gain_minus,  loss_minus,space_global, trader6_instrument,quota_gain, 1,1,safe_minus,inverse_minus)
-    trader6 = ConTrader(mm, trader6_instrument, 0.00001,5, 1, -1, gain_plus , loss_plus,space_global, trader5_instrument,quota_gain,-1, -1,safe_plus,inverse_plus)
+    trader5 = ConTrader(mm, trader5_instrument, 0.001,3, 1, -1, gain_minus,  loss_minus,space_global, trader6_instrument,quota_gain, 1,1,safe_minus,inverse_minus)
+    trader6 = ConTrader(mm, trader6_instrument, 0.001,3, -1, 1, gain_plus , loss_plus,space_global, trader5_instrument,quota_gain,-1, -1,safe_plus,inverse_plus)
     trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1, -1, gain_minus,  loss_minus,space_global, trader8_instrument,quota_gain, 1, -1,safe_minus,inverse_minus)
-    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5, 1, -1, gain_plus , loss_plus ,space_global, trader7_instrument,quota_gain,-1,1,safe_plus,inverse_plus)
+    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5, -1, 1, gain_plus , loss_plus ,space_global, trader7_instrument,quota_gain,-1,1,safe_plus,inverse_plus)
 
     traders = [trader1, trader2, trader3, trader4, trader5, trader6, trader7, trader8]
 
@@ -1016,7 +1016,7 @@ if __name__ == "__main__":
             # Pair 1
             # paires indexées : (0,1), (2,3), (4,5), (6,7)
 
-            print('here')
+ 
             for i in range(0, len(traders), 2):
                 t1 = traders[i]
                 t2 = traders[i+1]                
