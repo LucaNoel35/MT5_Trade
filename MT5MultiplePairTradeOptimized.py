@@ -27,8 +27,8 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre =  62758578
-pwd = 'Sephiroth35!'
+nombre =  62024999
+pwd = 'Lucaevan2967*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 
@@ -63,7 +63,7 @@ low_correlation_value = high_correlation_value/3
 
 selection_condition_buy_sell=1
 
-selection_gain_loss=1
+selection_gain_loss=0
 
 
 space_global=0
@@ -85,15 +85,15 @@ elif selection_gain_loss==1:
   gain_minus=1
   loss_minus=2
 elif selection_gain_loss==2:
-  gain_plus=2
-  loss_plus=1.5
-  gain_minus=1
-  loss_minus=1.5
-elif selection_gain_loss==3:
-  gain_plus=2
+  gain_plus=1
   loss_plus=1
   gain_minus=1
-  loss_minus=1
+  loss_minus=2
+elif selection_gain_loss==3:
+  gain_plus=1
+  loss_plus=2
+  gain_minus=1
+  loss_minus=2
 
 
 position_fully_automated=0
@@ -593,7 +593,10 @@ class ConTrader:
             if self.emergency==1:
                 print(
                     f"[⚠️ EMERGENCY] {self.instrument} doublon — "
+                    f"remplacement currency-linked → {self.replacement}"
                 )
+            else:
+                print(f"[✅ STABLE] {self.instrument} est à nouveau unique.")
 
         # Trading windows
         def within_quiet_hours():
@@ -676,8 +679,8 @@ class ConTrader:
             if can_trade:
                 # sell setup
                 if  position_partially_automated==1:
-                    cond_sell = ( ((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1*correlation_inverse) or (self.first_run==-1 and self.position_b == 0)
-                    cond_buy = ( ((self.config == 1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == -1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == -1*correlation_inverse) or (self.first_run==1 and self.position_b == 0)
+                    cond_sell = ( ((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1) or (self.first_run==-1 and self.position_b == 0)
+                    cond_buy = ( ((self.config == 1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == -1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == -1) or (self.first_run==1 and self.position_b == 0)
                 else:
                     cond_sell = (self.config == -1*self.strat) 
                     cond_buy = (self.config == 1*self.strat)               
@@ -855,23 +858,7 @@ class ConTrader:
             if available!=None:
                 if len(available)!=0:
                     self.replacement = random.choice(available)
-                    print(
-                        f"[⚠️ EMERGENCY] {self.instrument} doublon — "
-                        f"remplacement currency-linked → {self.replacement}"
-                    )
-                else:
-                    print(
-                        f"[⚠️ EMERGENCY] {self.instrument} doublon — "
-                        f"mais aucun instrument compatible currency disponible"
-                    )                    
-            else:
-                print(
-                    f"[⚠️ EMERGENCY] {self.instrument} doublon "
-                    f"mais aucun instrument compatible currency disponible."
-                )
         else:
-            if self.emergency:
-                print(f"[✅ STABLE] {self.instrument} est à nouveau unique.")
             self.emergency = 0
             self.double_instrument = 0
 
@@ -945,14 +932,14 @@ if __name__ == "__main__":
 
     # Instantiate traders
     trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1, -1, gain_minus,  loss_minus,space_global, trader2_instrument,quota_gain,-1,1,safe_minus,inverse_minus)
-    trader2 = ConTrader(mm, trader2_instrument, 0.001,3,  -1, 1, gain_plus , loss_plus,space_global, trader1_instrument,quota_gain, 1, -1*correlation_inverse,safe_plus,inverse_plus)
+    trader2 = ConTrader(mm, trader2_instrument, 0.001,3,  -1, 1, gain_plus , loss_plus,space_global, trader1_instrument,quota_gain, 1, -1,safe_plus,inverse_plus)
     trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1, -1, gain_minus,  loss_minus,space_global, trader4_instrument,quota_gain,-1, -1,safe_minus,inverse_minus)
-    trader4 = ConTrader(mm, trader4_instrument, 0.001,3,  -1, 1, gain_plus, loss_plus,space_global, trader3_instrument,quota_gain, 1,1*correlation_inverse,safe_plus,inverse_plus)
+    trader4 = ConTrader(mm, trader4_instrument, 0.001,3,  -1, 1, gain_plus, loss_plus,space_global, trader3_instrument,quota_gain, 1,1,safe_plus,inverse_plus)
 
     trader5 = ConTrader(mm, trader5_instrument, 0.001,3, 1, -1, gain_minus,  loss_minus,space_global, trader6_instrument,quota_gain, 1,1,safe_minus,inverse_minus)
-    trader6 = ConTrader(mm, trader6_instrument, 0.001,3, -1, 1, gain_plus , loss_plus,space_global, trader5_instrument,quota_gain,-1, -1*correlation_inverse,safe_plus,inverse_plus)
+    trader6 = ConTrader(mm, trader6_instrument, 0.001,3, -1, 1, gain_plus , loss_plus,space_global, trader5_instrument,quota_gain,-1, -1,safe_plus,inverse_plus)
     trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1, -1, gain_minus,  loss_minus,space_global, trader8_instrument,quota_gain, 1, -1,safe_minus,inverse_minus)
-    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5, -1, 1, gain_plus , loss_plus ,space_global, trader7_instrument,quota_gain,-1,1*correlation_inverse,safe_plus,inverse_plus)
+    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5, -1, 1, gain_plus , loss_plus ,space_global, trader7_instrument,quota_gain,-1,1,safe_plus,inverse_plus)
 
     traders = [trader1, trader2, trader3, trader4, trader5, trader6, trader7, trader8]
 
