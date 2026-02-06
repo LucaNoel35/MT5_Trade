@@ -63,7 +63,7 @@ low_correlation_value = high_correlation_value/3
 
 selection_condition_buy_sell=1
 
-selection_gain_loss=0
+selection_gain_loss=1
 
 
 space_global=0
@@ -75,25 +75,25 @@ loss_minus=1
 
 
 if selection_gain_loss==0:
-  gain_plus=1.5
+  gain_plus=2
   loss_plus=1
   gain_minus=1
-  loss_minus=2
+  loss_minus=1
 elif selection_gain_loss==1:
   gain_plus=2
   loss_plus=1
   gain_minus=1
   loss_minus=2
 elif selection_gain_loss==2:
-  gain_plus=1
+  gain_plus=2
   loss_plus=1
   gain_minus=1
-  loss_minus=2
+  loss_minus=1.5
 elif selection_gain_loss==3:
-  gain_plus=1
-  loss_plus=2
+  gain_plus=2
+  loss_plus=1.5
   gain_minus=1
-  loss_minus=2
+  loss_minus=1.5
 
 
 position_fully_automated=0
@@ -595,8 +595,7 @@ class ConTrader:
                     f"[⚠️ EMERGENCY] {self.instrument} doublon — "
                     f"remplacement currency-linked → {self.replacement}"
                 )
-            else:
-                print(f"[✅ STABLE] {self.instrument} est à nouveau unique.")
+
 
         # Trading windows
         def within_quiet_hours():
@@ -829,35 +828,6 @@ class ConTrader:
             self.emergency = 1
             self.double_instrument += 1
 
-            available = None
-            # 🔥 instruments libres ET currency commune
-            if correlation_inverse == 1 and correlation_per_name==1:
-                available = [
-                    s for s in watchlist
-                    if s not in used_symbols
-                    and s != self.instrument
-                    and has_common_currency(s, self.instrument)
-                ]
-
-            elif correlation_inverse == -1 and correlation_per_name==1:
-                available = [
-                    s for s in watchlist
-                    if s not in used_symbols
-                    and s != self.instrument
-                    and has_different_currency(s, self.instrument)
-                ]
-  
-            else:
-                available = [
-                    s for s in watchlist
-                    if s not in used_symbols
-                    and s != self.instrument
-                ]
-
-
-            if available!=None:
-                if len(available)!=0:
-                    self.replacement = random.choice(available)
         else:
             self.emergency = 0
             self.double_instrument = 0
@@ -901,9 +871,19 @@ def correlation_matrix(mm: MarketManager, trader1: ConTrader, trader2: ConTrader
     max_corr_index = None
 
     if correlation_inverse==1:
-        max_corr_index = corr.where(corr < 1).stack().idxmax()
+        if trader1.position == 0 and trader2.position == 0:
+            max_corr_index = corr.where(corr < 1).stack().idxmax()
+        elif trader1.position != 0 and trader2.position == 0:
+            max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmax())
+        elif trader1.position == 0 and trader2.position != 0:
+            max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmax(), trader2.instrument)
     else:
-        max_corr_index = corr.where(corr < 1).stack().idxmin()
+        if trader1.position == 0 and trader2.position == 0:
+            max_corr_index = corr.where(corr < 1).stack().idxmin()
+        elif trader1.position != 0 and trader2.position == 0:
+            max_corr_index = (trader1.instrument, corr.loc[trader1.instrument].drop(trader1.instrument).idxmin())
+        elif trader1.position == 0 and trader2.position != 0:
+            max_corr_index = (corr.loc[trader2.instrument].drop(trader2.instrument).idxmin(), trader2.instrument)
 
 
     if max_corr_index != None:
