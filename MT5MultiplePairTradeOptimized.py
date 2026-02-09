@@ -484,7 +484,7 @@ class ConTrader:
         else:
             max_corr_index = corr_df.where(corr_df < 1).stack().idxmax()
             corr = corr_df.loc[max_corr_index]
-            self.correlation = 1 if ((corr*correlation_inverse > low_correlation_value*correlation_inverse and (self.instrument != self.instrument_b)) or continuous_corr_calculus==0) and  self.emergency==0 else 0
+            self.correlation = 1 if ((corr*correlation_inverse > low_correlation_value*correlation_inverse and (self.instrument != self.instrument_b)) or continuous_corr_calculus==0 ) and  self.emergency==0 and self.instrument else 0
         self._last_corr_check = now
 
     def highly_correlate(self):
@@ -824,7 +824,9 @@ class ConTrader:
 
         duplicate = self.instrument in used_symbols
 
-        if duplicate:
+        absent = (self.instrument not in watchlist) or (self.instrument_b not in watchlist)
+
+        if duplicate or absent:
             self.emergency = 1
             self.double_instrument += 1
 
