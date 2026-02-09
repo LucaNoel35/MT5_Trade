@@ -369,7 +369,8 @@ class ConTrader:
             s for s in watchlist
             if s not in ConTrader.assigned_symbols_global
         ]
-
+        
+        """
         # 🔥 NOUVEAU : même currency que l’instrument actuel
         if self.instrument and correlation_per_name==1 and correlation_inverse==1:
             possible_symbols = [
@@ -381,6 +382,7 @@ class ConTrader:
                 s for s in possible_symbols
                 if has_different_currency(s, self.instrument)
             ]
+        """
 
         # Positions existantes
         for s in possible_symbols:
