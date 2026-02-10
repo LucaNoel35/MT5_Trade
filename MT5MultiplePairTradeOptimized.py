@@ -56,12 +56,23 @@ correlation_number = 60
 
 #correlation inversed (-1) means high risk high reward, and vice versa
 correlation_inverse=-1
-continuous_corr_calculus=1
+continuous_corr_calculus=0
+correlation_per_name=1
+use_scoring=0
 
 high_correlation_value = 0.75
 low_correlation_value = high_correlation_value/3
 
 selection_condition_buy_sell=1
+
+position_fully_automated=0
+position_partially_automated=1
+
+safe_plus=1
+safe_minus=-1
+
+inverse_plus=0
+inverse_minus=0
 
 selection_gain_loss=1
 
@@ -96,17 +107,6 @@ elif selection_gain_loss==3:
   loss_minus=1.5
 
 
-position_fully_automated=0
-position_partially_automated=1
-
-safe_plus=1
-safe_minus=-1
-
-inverse_plus=0
-inverse_minus=0
-
-correlation_per_name=1
-use_scoring=0
 
 # Time to wait to check double instrument in s
 time_check_double = 5.0
@@ -130,15 +130,15 @@ Watch_List = ['AUDJPY.pro','EURUSD.pro', 'EURJPY.pro','GBPUSD.pro',
 # dont forget to add watchlist to all_symbol in main function
 
 trader1_instrument='EURJPY.pro'
-trader2_instrument='USDJPY.pro'
+trader2_instrument='GBPUSD.pro'
 trader3_instrument='CADJPY.pro'
-trader4_instrument='AUDJPY.pro'
+trader4_instrument='EURUSD.pro'
 
 # Add more if needed (watch list 2)
 trader5_instrument='GBPJPY.pro'
-trader6_instrument='CHFJPY.pro'
-trader7_instrument='EURUSD.pro'
-trader8_instrument='GBPUSD.pro'
+trader6_instrument='USDCHF.pro'
+trader7_instrument='NZDJPY.pro'
+trader8_instrument='AUDUSD.pro'
 
 # =========================
 # ==== MARKET MANAGER =====
@@ -953,10 +953,7 @@ if __name__ == "__main__":
         # condition
         if (t1.correlation == 0 and t1.replacement == t1.instrument) or (t2.correlation == 0 and t2.replacement == t2.instrument):
             correlation_matrix(mm, t1, t2, others, Watch_List)
-
-    # allow instrument replacement when safe
-    for t in traders:
-        t.replace_instrument()
+            t1.replace_instrument(),t2.replace_instrument()
 
     start=time.time()
 
