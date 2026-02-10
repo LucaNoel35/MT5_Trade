@@ -79,6 +79,19 @@ selection_gain_loss=1
 
 space_global=0
 
+
+first_run_1=1
+first_run_2=-1
+first_run_3=1
+first_run_4=-1
+
+if correlation_inverse==-1:
+    first_run_1=1
+    first_run_2=1
+    first_run_3=-1
+    first_run_4=-1
+
+
 gain_plus=2
 loss_plus=1
 gain_minus=2
@@ -681,8 +694,8 @@ class ConTrader:
             if can_trade:
                 # sell setup
                 if  position_partially_automated==1:
-                    cond_sell = ( ((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1) or (self.first_run==-1 and self.position_b == 0)
-                    cond_buy = ( ((self.config == 1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == -1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == -1) or (self.first_run==1 and self.position_b == 0)
+                    cond_sell = ( ((self.config == -1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == 1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == 1*correlation_inverse) or (self.first_run==-1 and self.position_b == 0)
+                    cond_buy = ( ((self.config == 1*self.strat and (self.previous_position != self.latest_seen_position or self.previous_position == 0)) or (self.previous_position == -1 and self.previous_position == self.latest_seen_position))  and (self.beginning != 1)) or (self.beginning == 1 and self.position_b == -1*correlation_inverse) or (self.first_run==1 and self.position_b == 0)
                 else:
                     cond_sell = (self.config == -1*self.strat) 
                     cond_buy = (self.config == 1*self.strat)               
@@ -916,15 +929,15 @@ if __name__ == "__main__":
     mm.pull_ticks(); mm.pull_positions(); mm.pull_rates()
 
     # Instantiate traders
-    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1, -1, gain_minus,  loss_minus,space_global, trader2_instrument,quota_gain,-1,1,safe_minus,inverse_minus)
-    trader2 = ConTrader(mm, trader2_instrument, 0.001,3,  -1, 1, gain_plus , loss_plus,space_global, trader1_instrument,quota_gain, 1, -1,safe_plus,inverse_plus)
-    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1, -1, gain_minus,  loss_minus,space_global, trader4_instrument,quota_gain,-1, -1,safe_minus,inverse_minus)
-    trader4 = ConTrader(mm, trader4_instrument, 0.001,3,  -1, 1, gain_plus, loss_plus,space_global, trader3_instrument,quota_gain, 1,1,safe_plus,inverse_plus)
+    trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1, -1, gain_minus,  loss_minus,space_global, trader2_instrument,quota_gain,-1,first_run_1,safe_minus,inverse_minus)
+    trader2 = ConTrader(mm, trader2_instrument, 0.001,3,  -1, 1, gain_plus , loss_plus,space_global, trader1_instrument,quota_gain, 1, first_run_2,safe_plus,inverse_plus)
+    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1, -1, gain_minus,  loss_minus,space_global, trader4_instrument,quota_gain,-1, first_run_2,safe_minus,inverse_minus)
+    trader4 = ConTrader(mm, trader4_instrument, 0.001,3,  -1, 1, gain_plus, loss_plus,space_global, trader3_instrument,quota_gain, 1,first_run_1,safe_plus,inverse_plus)
 
-    trader5 = ConTrader(mm, trader5_instrument, 0.001,3, 1, -1, gain_minus,  loss_minus,space_global, trader6_instrument,quota_gain, 1,1,safe_minus,inverse_minus)
-    trader6 = ConTrader(mm, trader6_instrument, 0.001,3, -1, 1, gain_plus , loss_plus,space_global, trader5_instrument,quota_gain,-1, -1,safe_plus,inverse_plus)
-    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1, -1, gain_minus,  loss_minus,space_global, trader8_instrument,quota_gain, 1, -1,safe_minus,inverse_minus)
-    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5, -1, 1, gain_plus , loss_plus ,space_global, trader7_instrument,quota_gain,-1,1,safe_plus,inverse_plus)
+    trader5 = ConTrader(mm, trader5_instrument, 0.001,3, 1, -1, gain_minus,  loss_minus,space_global, trader6_instrument,quota_gain, 1,first_run_3,safe_minus,inverse_minus)
+    trader6 = ConTrader(mm, trader6_instrument, 0.001,3, -1, 1, gain_plus , loss_plus,space_global, trader5_instrument,quota_gain,-1, first_run_4,safe_plus,inverse_plus)
+    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1, -1, gain_minus,  loss_minus,space_global, trader8_instrument,quota_gain, 1, first_run_4,safe_minus,inverse_minus)
+    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5, -1, 1, gain_plus , loss_plus ,space_global, trader7_instrument,quota_gain,-1,first_run_3,safe_plus,inverse_plus)
 
     traders = [trader1, trader2, trader3, trader4, trader5, trader6, trader7, trader8]
 
