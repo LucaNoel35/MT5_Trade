@@ -953,7 +953,8 @@ if __name__ == "__main__":
         # condition
         if (t1.correlation == 0 and t1.replacement == t1.instrument) or (t2.correlation == 0 and t2.replacement == t2.instrument):
             correlation_matrix(mm, t1, t2, others, Watch_List)
-            t1.replace_instrument(),t2.replace_instrument()
+            
+        t1.replace_instrument(),t2.replace_instrument()
 
     start=time.time()
 
@@ -996,8 +997,8 @@ if __name__ == "__main__":
                     # condition
                     if (t1.correlation == 0 and t1.replacement == t1.instrument) or (t2.correlation == 0 and t2.replacement == t2.instrument):
                         correlation_matrix(mm, t1, t2, others, Watch_List)
-                        t1.replace_instrument(),t2.replace_instrument()      
-
+                        
+                t1.replace_instrument(),t2.replace_instrument()      
                 t1.place_info(t2); t2.place_info(t1)
             # emergency changes (use watchlists)
             for t in traders:
