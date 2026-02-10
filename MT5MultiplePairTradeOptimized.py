@@ -996,7 +996,8 @@ if __name__ == "__main__":
                     # condition
                     if (t1.correlation == 0 and t1.replacement == t1.instrument) or (t2.correlation == 0 and t2.replacement == t2.instrument):
                         correlation_matrix(mm, t1, t2, others, Watch_List)
-                        
+                        t1.replace_instrument(),t2.replace_instrument()      
+
                 t1.place_info(t2); t2.place_info(t1)
             # emergency changes (use watchlists)
             for t in traders:
@@ -1007,8 +1008,6 @@ if __name__ == "__main__":
                 # execute decisions
                 if (time.time()-start>time_check_main and no_position_at_start==1) or no_position_at_start==0:
                     t.execute_trades()
-                # allow instrument replacement when safe
-                t.replace_instrument()
 
             # pace with timeframe; 1s is enough for M1
             time.sleep(1.0)
