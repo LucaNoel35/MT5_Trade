@@ -27,8 +27,8 @@ from typing import Dict, List, Optional
 # =========================
 
 # ⚠️ Move these to environment variables in production
-nombre =  62024999
-pwd = 'Lucaevan2967*'
+nombre =  62529779
+pwd = 'Sephiroth35*'
 server_name = 'OANDATMS-MT5'
 path_name = r'C:\Program Files\OANDA TMS MT5 Terminal\terminal64.exe'
 
@@ -56,7 +56,7 @@ correlation_number = 60
 
 #correlation inversed (-1) means high risk high reward, and vice versa
 correlation_inverse=-1
-continuous_corr_calculus=0
+continuous_corr_calculus=1
 correlation_per_name=1
 use_scoring=0
 
@@ -71,38 +71,34 @@ position_partially_automated=1
 safe_plus=1
 safe_minus=-1
 
-inverse_plus=0
+inverse_plus=-0
 inverse_minus=0
-
-selection_gain_loss=1
-
 
 space_global=0
 
-
-first_run_1=1
-first_run_2=-1
-first_run_3=1
-first_run_4=-1
-
-if correlation_inverse==-1:
+if correlation_inverse==1:
+    first_run_1=1
+    first_run_2=-1
+    first_run_3=-1
+    first_run_4=1
+else:
     first_run_1=1
     first_run_2=1
     first_run_3=-1
     first_run_4=-1
 
-
-gain_plus=2
+gain_plus=1.5
 loss_plus=1
-gain_minus=2
-loss_minus=1
+gain_minus=1
+loss_minus=2
 
+selection_gain_loss=1
 
 if selection_gain_loss==0:
-  gain_plus=2
-  loss_plus=1
+  gain_plus=1
+  loss_plus=2
   gain_minus=1
-  loss_minus=1
+  loss_minus=2
 elif selection_gain_loss==1:
   gain_plus=2
   loss_plus=1
@@ -114,10 +110,15 @@ elif selection_gain_loss==2:
   gain_minus=1
   loss_minus=1.5
 elif selection_gain_loss==3:
-  gain_plus=2
-  loss_plus=1.5
+  gain_plus=1
+  loss_plus=1
   gain_minus=1
-  loss_minus=1.5
+  loss_minus=2
+elif selection_gain_loss==4:
+  gain_plus=2
+  loss_plus=1
+  gain_minus=2
+  loss_minus=1
 
 
 
@@ -931,13 +932,13 @@ if __name__ == "__main__":
     # Instantiate traders
     trader1 = ConTrader(mm, trader1_instrument, 0.001,3,  1, -1, gain_minus,  loss_minus,space_global, trader2_instrument,quota_gain,-1,first_run_1,safe_minus,inverse_minus)
     trader2 = ConTrader(mm, trader2_instrument, 0.001,3,  -1, 1, gain_plus , loss_plus,space_global, trader1_instrument,quota_gain, 1, first_run_2,safe_plus,inverse_plus)
-    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1, -1, gain_minus,  loss_minus,space_global, trader4_instrument,quota_gain,-1, first_run_2,safe_minus,inverse_minus)
-    trader4 = ConTrader(mm, trader4_instrument, 0.001,3,  -1, 1, gain_plus, loss_plus,space_global, trader3_instrument,quota_gain, 1,first_run_1,safe_plus,inverse_plus)
+    trader3 = ConTrader(mm, trader3_instrument, 0.001,3,  1, -1, gain_minus,  loss_minus,space_global, trader4_instrument,quota_gain,-1, first_run_3,safe_minus,inverse_minus)
+    trader4 = ConTrader(mm, trader4_instrument, 0.001,3,  -1, 1, gain_plus, loss_plus,space_global, trader3_instrument,quota_gain, 1,first_run_4,safe_plus,inverse_plus)
 
-    trader5 = ConTrader(mm, trader5_instrument, 0.001,3, 1, -1, gain_minus,  loss_minus,space_global, trader6_instrument,quota_gain, 1,first_run_3,safe_minus,inverse_minus)
-    trader6 = ConTrader(mm, trader6_instrument, 0.001,3, -1, 1, gain_plus , loss_plus,space_global, trader5_instrument,quota_gain,-1, first_run_4,safe_plus,inverse_plus)
-    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1, -1, gain_minus,  loss_minus,space_global, trader8_instrument,quota_gain, 1, first_run_4,safe_minus,inverse_minus)
-    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5, -1, 1, gain_plus , loss_plus ,space_global, trader7_instrument,quota_gain,-1,first_run_3,safe_plus,inverse_plus)
+    trader5 = ConTrader(mm, trader5_instrument, 0.001,3, 1, -1, gain_minus,  loss_minus,space_global, trader6_instrument,quota_gain, 1,first_run_4,safe_minus,inverse_minus)
+    trader6 = ConTrader(mm, trader6_instrument, 0.001,3, -1, 1, gain_plus , loss_plus,space_global, trader5_instrument,quota_gain,-1, first_run_3,safe_plus,inverse_plus)
+    trader7 = ConTrader(mm, trader7_instrument, 0.00001,5, 1, -1, gain_minus,  loss_minus,space_global, trader8_instrument,quota_gain, 1, first_run_2,safe_minus,inverse_minus)
+    trader8 = ConTrader(mm, trader8_instrument, 0.00001,5, -1, 1, gain_plus , loss_plus ,space_global, trader7_instrument,quota_gain,-1,first_run_1,safe_plus,inverse_plus)
 
     traders = [trader1, trader2, trader3, trader4, trader5, trader6, trader7, trader8]
 
@@ -1013,18 +1014,14 @@ if __name__ == "__main__":
                         
                 t1.replace_instrument(),t2.replace_instrument()      
                 t1.place_info(t2); t2.place_info(t1)
-            # emergency changes (use watchlists)
-            for t in traders:
-                # Liste des instruments utilisés par les autres traders
-                used_by_others = [x.instrument for x in traders if x is not t]
-                t.emergency_change_instrument(Watch_List, used_by_others)
-                t.correlate()
-                # execute decisions
+                used_by_others1= [x.instrument for x in traders if x is not t1]
+                used_by_others2 = [x.instrument for x in traders if x is not t2]
+                t1.emergency_change_instrument(Watch_List, used_by_others1);t2.emergency_change_instrument(Watch_List, used_by_others2)
+                t1.correlate();t2.correlate()
                 if (time.time()-start>time_check_main and no_position_at_start==1) or no_position_at_start==0:
-                    t.execute_trades()
-
-            # pace with timeframe; 1s is enough for M1
+                    t1.execute_trades();t2.execute_trades()  
             time.sleep(1.0)
+
         except:
             print("Trading not active")
             print(mt5.last_error())
